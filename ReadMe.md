@@ -3,7 +3,7 @@ Smart NotePad
 
 This Smart Notepad idea is packed with a comprehensive set of features. Building such an app will require combining several technologies and frameworks to handle both the front-end and back-end operations. Below is an outline of how to implement these features:
 
-1. Automatic Content Organization
+1. ** Automatic Content Organization **
 Categorization: Use machine learning models or keyword matching to identify and categorize notes as:
 Text
 To-Do Lists
