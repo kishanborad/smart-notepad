@@ -1,27 +1,30 @@
-Smart NotePad
+# Smart NotePad
 
 
-This Smart Notepad idea is packed with a comprehensive set of features. Building such an app will require combining several technologies and frameworks to handle both the front-end and back-end operations. Below is an outline of how to implement these features:
+## This Smart Notepad idea is packed with a comprehensive set of features. Building such an app will require combining several technologies and frameworks to handle both the front-end and back-end operations. Below is an outline of how to implement these features:
 
-1. ** Automatic Content Organization **
-Categorization: Use machine learning models or keyword matching to identify and categorize notes as:
-Text
-To-Do Lists
-Meeting Notes
-Ideas
-Code Snippets
-Checklists
-Sketches
-Tags (like Work, Personal, Projects)
-Tech Implementation: NLP libraries like spaCy or TensorFlow for text classification; custom rules for other categories.
-2. Date & Time Stamping
+1. **Automatic Content Organization**
+    **Categorization:** Use machine learning models or keyword matching to identify and categorize notes as:
+        Text
+        To-Do Lists
+        Meeting Notes
+        Ideas
+        Code Snippets
+        Checklists
+        Sketches
+        Tags (like Work, Personal, Projects)
+    **Tech Implementation:** NLP libraries like spaCy or TensorFlow for text classification; custom rules for other categories.
+
+2. **Date & Time Stamping**
 Implementation: Every time a note is created or modified, automatically save the timestamp.
 Tech Stack: Date-time libraries (e.g., moment.js for JavaScript or datetime in Python).
 Sorting: Implement date-based sorting in the backend with database queries for both newest and oldest sorting.
+
 3. Smart Lists & Formatting
 Lists & Checklists: Automatically detect lists in text (e.g., -, *, 1.) and format them as interactive checkboxes for checklists and numbered/bullet lists.
 Rich Text Formatting: Enable options for bold, italics, underline, and highlighting using a rich text editor like Quill.js or Draft.js in the front-end.
 Tech Stack: Rich text editing libraries (e.g., Quill.js, TinyMCE).
+
 4. Search & Filtering
 Text Search: Implement full-text search in the note database using Elasticsearch or a similar tool.
 Filtering: Allow users to filter by tags, date, or content type.
