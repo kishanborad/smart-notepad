@@ -1,0 +1,16 @@
+#  Environments
+
+.venv/*
+
+# Directorys
+
+.vscode/*
+Smart_Notepad.py
+
+# Logs
+
+**/logs
+**/logs/debug.log
+**/logs/error.log
+*.log
+!important.log
