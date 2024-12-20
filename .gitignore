@@ -5,6 +5,8 @@
 # Directorys
 
 .vscode/*
+.DS_Store/*
+.DS_Store
 
 # Logs
 
