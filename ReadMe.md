@@ -105,7 +105,7 @@
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 
-> ## Technologies and Tools:
+## Technologies and Tools:
 >    - **Frontend:** React.js, Angular, Vue.js, React Native (for mobile apps), HTML/CSS, JavaScript
 >    - **Backend:** Node.js (Express), Python (Flask/Django), Java (Spring Boot)
 >    - **Database:** MongoDB (NoSQL), PostgreSQL (SQL), Firebase
