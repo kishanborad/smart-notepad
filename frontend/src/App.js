@@ -1,5 +1,12 @@
+// frontend/src/App.js
+
 import React, { useEffect, useState } from 'react';
-import { fetchWelcomeMessage } from './services/notesService';
+import { fetchWelcomeMessage } from './services/notesServices';
+import { BrowserRouter as Routes, Route, Router } from 'react-router-dom';
+import NoteList from './components/NoteList'; // List all notes
+import NoteForm from './components/NoteForm'; // Form to create a new note
+import NoteItem from './components/NoteItem';  // Displays individual note
+import NoteEditForm from './components/NoteEditForm'; // Form to edit an existing note
 
 function App() {
   const [message, setMessage] = useState('');
@@ -14,10 +21,21 @@ function App() {
   }, []);
 
   return (
-    <div>
-      <h1>Smart Notepad</h1>
-      <p>{message}</p>
-    </div>
+    <Router>
+      <div className="App">
+        <header>
+          <h1>Smart Notepad</h1>
+        </header>
+        <main>
+          <Routes>
+            <Route exact path="/" component={NoteList} />
+            <Route path="/create" component={NoteForm} />
+            <Route path="/edit/:id" component={NoteEditForm} />   { /*NoteEditForm can also be called as EditNote. */ }
+            <Route path="/note/:id" element={NoteItem} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 

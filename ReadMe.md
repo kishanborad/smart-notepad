@@ -4,7 +4,8 @@
 
 
 
-## This Smart Notepad idea is packed with a comprehensive set of features. Building such an app will require combining several technologies and frameworks to handle both the front-end and back-end operations. Below is an outline of how to implement these features:
+## This Smart Notepad idea is packed with a comprehensive set of features. Building such an app will require combining several technologies and frameworks to handle both the front-end and back-end operations. 
+## Below is an outline of how to implement these features:
 ---------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -113,3 +114,6 @@
 >    - **NLP/AI:** spaCy, TensorFlow, OpenAI GPT models (for summaries and suggestions), Tesseract.js (OCR)
 >    - **Versioning:** Git, Database Change Tracking
 >    - **Authentication & Security:** JWT, OAuth, Biometric authentication libraries
+
+
+

@@ -1,21 +1,28 @@
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
-const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const bodyParser = require('body-parser');
+const noteRoutes = require('./routes/noteRoutes');
 
 const app = express();
+const PORT = process.env.PORT || 1020;
 
 // Middleware
+app.use(express.json()); // To parse JSON requests
+app.use(cors()); // Enable CORS for all origins
 app.use(bodyParser.json());
-app.use(cors());
 
-// Test Route
-app.get('/', (req, res) => {
-  res.send('Welcome to the Smart Notepad backend!');
-});
+// Routes
+app.use('/api/notes', noteRoutes);
+
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('Error connecting to MongoDB:', err));
 
 // Start Server
-const PORT = process.env.PORT || 1020;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
