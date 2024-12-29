@@ -1,8 +1,7 @@
 // backend/routes/noteRoutes.js
 const express = require('express');
-const Note = require('../models/Note');
-
 const router = express.Router();
+const Note = require('../models/Note');
 
 // POST: Create a new note
 router.post('/', async (req, res) => {
@@ -26,28 +25,32 @@ router.post('/', async (req, res) => {
   });
 
 // GET: Get all notes
-router.get('/notes', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const notes = await Note.find();
-    res.status(200).json(notes);
-  } catch (error) {
+    res.json(notes);
+  } catch (err) {
     res.status(500).json({ error: 'Failed to fetch notes' });
   }
 });
 
 // GET: Get a single note by ID
-router.get('/notes/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const note = await Note.findById(req.params.id);
-    if (!note) return res.status(404).json({ error: 'Note not found' });
-    res.status(200).json(note);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch the note' });
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+    res.json(note);
+  } catch (err) {
+    console.error('Error fetching note:', err.message);
+    res.status(500).json({ error: `Error fetching note by ID: ${err.message}` });
   }
 });
 
+
 // PUT: Update a note by ID
-router.put('/notes/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const { title, content } = req.body;
     const updatedNote = await Note.findByIdAndUpdate(
@@ -63,7 +66,7 @@ router.put('/notes/:id', async (req, res) => {
 });
 
 // DELETE: Delete a note by ID
-router.delete('/notes/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const deletedNote = await Note.findByIdAndDelete(req.params.id);
     if (!deletedNote) return res.status(404).json({ error: 'Note not found' });

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'; // To redirect to the edit page
 import { deleteNote } from '../Api'; // API utility for deleting notes
 
 const NoteItem = ({ note, onDelete }) => {
-  const history = useNavigate(); // To navigate to the edit page
+  const navigate = useNavigate(); // To navigate to the edit page
 
   // Handle the delete action
   const handleDelete = async () => {
@@ -19,7 +19,7 @@ const NoteItem = ({ note, onDelete }) => {
 
   // Navigate to the edit page when clicking the Edit button
   const handleEdit = () => {
-    history.push(`/edit/${note._id}`);
+    navigate(`/edit/${note._id}`);
   };
 
   return (

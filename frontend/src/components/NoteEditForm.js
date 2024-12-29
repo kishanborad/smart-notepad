@@ -24,6 +24,7 @@ const NoteEditForm = () => {
         setLoading(false);
       } catch (error) {
         setError('Error fetching note details');
+        console.error('Error fetching note:', error);
         setLoading(false);
       }
     };
@@ -51,7 +52,7 @@ const NoteEditForm = () => {
       await updateNote(noteId, updatedNote);
 
       // Redirect to the note list page after updating the note
-      history.push('/');
+      history.push('/note/${noteId}');
     } catch (error) {
       setError('Error updating note');
       console.error('Error updating note:', error);

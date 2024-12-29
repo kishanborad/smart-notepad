@@ -16,14 +16,16 @@ export const getNotes = async () => {
 };
 
 // Get a single note by ID
-export const getNoteById = async (noteId) => {
+export const getNoteById = async (id) => {
   try {
-    const response = await axios.get(`${BASE_URL}/${noteId}`);
+    const response = await axios.get(`${BASE_URL}/${id}`);
     return response.data;
   } catch (error) {
-    throw new Error('Error fetching note by ID: ' + error.message);
+    console.error('Error fetching note by ID:', error.message);
+    throw new Error(`Error fetching note by ID: ${error.message}`);
   }
 };
+
 
 // Create a new note
 export const createNote = async (newNote) => {
@@ -36,9 +38,9 @@ export const createNote = async (newNote) => {
 };
 
 // Update an existing note
-export const updateNote = async (noteId, updatedNote) => {
+export const updateNote = async (id, updatedNote) => {
   try {
-    const response = await axios.put(`${BASE_URL}/${noteId}`, updatedNote);
+    const response = await axios.put(`${BASE_URL}/${id}`, updatedNote);
     return response.data;
   } catch (error) {
     throw new Error('Error updating note: ' + error.message);
@@ -46,9 +48,9 @@ export const updateNote = async (noteId, updatedNote) => {
 };
 
 // Delete a note
-export const deleteNote = async (noteId) => {
+export const deleteNote = async (id) => {
   try {
-    const response = await axios.delete(`${BASE_URL}/${noteId}`);
+    const response = await axios.delete(`${BASE_URL}/${id}`);
     return response.data;
   } catch (error) {
     throw new Error('Error deleting note: ' + error.message);

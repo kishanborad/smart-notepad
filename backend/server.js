@@ -1,19 +1,18 @@
-require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const bodyParser = require('body-parser');
-const noteRoutes = require('./routes/noteRoutes');
+const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 1020;
+const noteRoutes = require('./routes/noteRoutes');
 
 // Middleware
-app.use(express.json()); // To parse JSON requests
-app.use(cors()); // Enable CORS for all origins
 app.use(bodyParser.json());
+app.use(cors());
 
-// Routes
+// API Routes
 app.use('/api/notes', noteRoutes);
 
 // MongoDB Connection
@@ -22,7 +21,9 @@ mongoose.connect(process.env.MONGO_URI, {
   useUnifiedTopology: true,
 })
   .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('Error connecting to MongoDB:', err));
+  .catch((err) => console.error('MongoDB connection error:', err));
 
-// Start Server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start the Server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
