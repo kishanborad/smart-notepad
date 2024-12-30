@@ -68,10 +68,24 @@ router.put('/:id', async (req, res) => {
 // DELETE: Delete a note by ID
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedNote = await Note.findByIdAndDelete(req.params.id);
-    if (!deletedNote) return res.status(404).json({ error: 'Note not found' });
+    const noteId = req.params.id;
+    console.log(`Received DELETE request for note ID: ${noteId}`); // Debugging log
+
+    // Check if the note exists
+    const note = await Note.findById(noteId);
+    if (!note) {
+      console.log(`Note with ID ${noteId} not found`); // Debugging log
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    // Delete the note
+    console.log(`Deleting note with ID: ${noteId}`); // Debugging log
+    await Note.findByIdAndDelete(noteId);
+
+    console.log(`Note with ID ${noteId} successfully deleted`); // Debugging log
     res.status(200).json({ message: 'Note deleted successfully' });
-  } catch (error) {
+  } catch (err) {
+    console.error(`Error during DELETE request for note ID ${req.params.id}:`, err.message); // Debugging log
     res.status(500).json({ error: 'Failed to delete the note' });
   }
 });

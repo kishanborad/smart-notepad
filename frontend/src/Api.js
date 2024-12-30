@@ -51,8 +51,16 @@ export const updateNote = async (id, updatedNote) => {
 export const deleteNote = async (id) => {
   try {
     const response = await axios.delete(`${BASE_URL}/${id}`);
-    return response.data;
+    if (response.status === 200) {
+      return response.data; // Return success message
+    } else {
+      throw new Error('Unexpected server response');
+    }
   } catch (error) {
-    throw new Error('Error deleting note: ' + error.message);
+    console.error(`Failed to delete note with ID ${id}:`, error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || 'Failed to delete the note');
   }
 };
+
+
+

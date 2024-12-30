@@ -31,16 +31,20 @@ const NoteList = () => {
   };
 
   // Function to handle the deletion of a note
-  const handleDeleteNote = async (id) => {
+  const handleDelete = async (id) => {
     try {
-      await deleteNote(id);
-      setNotes(notes.filter(note => note._id !== id)); // Remove deleted note from state
+      console.log(`Attempting to delete note with ID: ${id}`); // Debugging log
+      await deleteNote(id); // Call the API to delete the note
+      console.log(`Note with ID ${id} deleted successfully`); // Debugging log
+  
+      // Refetch the notes list to ensure UI synchronization
+      fetchNotes(); 
     } catch (error) {
-      setError('Error deleting note');
-      console.error('Error deleting note:', error);
+      console.error('Error deleting note:', error.response?.data?.error || error.message);
+      alert(error.response?.data?.error || 'An unexpected error occurred while deleting the note.');
     }
   };
-
+ 
   // Handle adding new note
   const handleAddNote = (newNote) => {
     setNotes([...notes, newNote]);
@@ -59,7 +63,7 @@ const NoteList = () => {
           <NoteItem 
             key={note._id} 
             note={note} 
-            onDelete={() => handleDeleteNote(note._id)} 
+            onDelete={() => handleDelete(note._id)} 
           />
         ))
       ) : (

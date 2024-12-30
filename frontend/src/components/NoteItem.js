@@ -8,7 +8,7 @@ const NoteItem = ({ note, onDelete }) => {
   const navigate = useNavigate(); // To navigate to the edit page
 
   // Handle the delete action
-  const handleDelete = async () => {
+  const handleDeleteNote = async () => {
     try {
       await deleteNote(note._id);
       onDelete(); // Remove note from parent list after deletion
@@ -28,7 +28,7 @@ const NoteItem = ({ note, onDelete }) => {
       <p>{note.content}</p>
       <div className="note-actions">
         <button onClick={handleEdit}>Edit</button>
-        <button onClick={handleDelete}>Delete</button>
+        <button onClick={handleDeleteNote}>Delete</button>
       </div>
     </div>
   );
