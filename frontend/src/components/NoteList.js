@@ -1,53 +1,52 @@
 // NoteList.js
 
+// NoteList.js
 import React, { useState, useEffect } from 'react';
-import { getNotes, deleteNote } from '../Api'; // API utility for fetching and deleting notes
-import NoteItem from './NoteItem'; // Component to display each note
-import NoteForm from './NoteForm'; // Form component for adding new notes
+import { getNotes, deleteNote } from '../Api';
+import NoteItem from './NoteItem';
+import NoteForm from './NoteForm';
 
 const NoteList = () => {
-  // State to hold the notes, loading state, and error state
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingIds, setDeletingIds] = useState(new Set());
 
-  // Fetch notes on component mount
   useEffect(() => {
     fetchNotes();
   }, []);
 
-  // Function to fetch notes from the backend
   const fetchNotes = async () => {
     try {
       setLoading(true);
       const fetchedNotes = await getNotes();
       setNotes(fetchedNotes);
-      setLoading(false);
     } catch (error) {
-      setLoading(false);
       setError('Error fetching notes');
       console.error('Error fetching notes:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Function to handle the deletion of a note
   const handleDelete = async (id) => {
+    if (deletingIds.has(id)) return; // Prevent duplicate calls for the same ID
+
     try {
-      console.log(`Attempting to delete note with ID: ${id}`); // Debugging log
-      await deleteNote(id); // Call the API to delete the note
-      console.log(`Note with ID ${id} deleted successfully`); // Debugging log
-  
-      // Refetch the notes list to ensure UI synchronization
-      fetchNotes(); 
+      setDeletingIds((prev) => new Set(prev).add(id)); // Mark as being deleted
+      await deleteNote(id); // Backend call
+      setNotes((prevNotes) => prevNotes.filter((note) => note._id !== id)); // Update UI state
+      alert('Note deleted successfully'); // Confirmation message
     } catch (error) {
-      console.error('Error deleting note:', error.response?.data?.error || error.message);
-      alert(error.response?.data?.error || 'An unexpected error occurred while deleting the note.');
+      console.error('Error deleting note:', error);
+      setError('Failed to delete the note');
+    } finally {
+      setDeletingIds((prev) => {
+        const updated = new Set(prev);
+        updated.delete(id); // Remove from deleting list
+        return updated;
+      });
     }
-  };
- 
-  // Handle adding new note
-  const handleAddNote = (newNote) => {
-    setNotes([...notes, newNote]);
   };
 
   return (
@@ -55,9 +54,7 @@ const NoteList = () => {
       <h2>Notes</h2>
       {loading && <p>Loading notes...</p>}
       {error && <p className="error">{error}</p>}
-      
-      <NoteForm onAddNote={handleAddNote} /> {/* Form to add new note */}
-      
+      <NoteForm onAddNote={(newNote) => setNotes([...notes, newNote])} />
       {notes.length > 0 ? (
         notes.map((note) => (
           <NoteItem 

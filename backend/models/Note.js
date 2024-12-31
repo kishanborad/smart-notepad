@@ -1,18 +1,18 @@
-// backend/models/Notes.js
+// backend/models/Note.js
 
-const mongoose = require('mongoose');
+const mongoose = require('mongoose');  // Import mongoose to interact with MongoDB
 
 // Define the schema for notes
 const NoteSchema = new mongoose.Schema({
   title: {
-    type: String,
-    required: true, // Title is required
+    type: String,     // Define the field type as String
+    required: true,   // Title is required when creating a new note
   },
   content: {
-    type: String,
-    required: true, // Content is required
+    type: String,     // Define the field type as String
+    required: true,   // Content is required when creating a new note
   },
-}, { timestamps: true }); // Adds createdAt and updatedAt fields automatically
+}, { timestamps: true });  // Automatically add 'createdAt' and 'updatedAt' fields
 
 // Create the model based on the schema
-module.exports = mongoose.model('Note', NoteSchema);  // Export the model for use in controllers
+module.exports = mongoose.model('Note', NoteSchema);  // Export the model so it can be used in controllers

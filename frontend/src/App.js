@@ -31,6 +31,7 @@ function App() {
           <Route exact path="/" element={<NoteList />} />
           <Route path="/create" element={<NoteForm />} />
           <Route path="/edit/:id" element={<NoteEditForm />} />   { /*NoteEditForm can also be called as EditNote. */ }
+          <Route path="/notes/:noteId/edit" element={<NoteEditForm />} />
           <Route path="/note/:id" element={<NoteItem />} />
         </Routes>
       </main>

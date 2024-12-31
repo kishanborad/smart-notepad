@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // API Routes
+app.use(express.json());  // For parsing JSON bodies
 app.use('/api/notes', noteRoutes);
 
 // MongoDB Connection
