@@ -23,6 +23,7 @@ const NoteForm = ({ onAddNote }) => {
       const newNote = {
         title,
         content,
+        is_Deleted: false,
       };
 
       // Send new note data to the backend

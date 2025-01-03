@@ -31,15 +31,19 @@ const NoteList = () => {
 
   const handleDelete = async (id) => {
     if (deletingIds.has(id)) return; // Prevent duplicate calls for the same ID
-
+  
     try {
       setDeletingIds((prev) => new Set(prev).add(id)); // Mark as being deleted
-      await deleteNote(id); // Backend call
-      setNotes((prevNotes) => prevNotes.filter((note) => note._id !== id)); // Update UI state
+      await deleteNote(id); // Backend call to delete the note (soft delete)
+      
+      // Fetch updated notes to ensure only non-deleted notes are displayed
+      const updatedNotes = await getNotes();
+      setNotes(updatedNotes);
+  
       alert('Note deleted successfully'); // Confirmation message
     } catch (error) {
       console.error('Error deleting note:', error);
-      setError('Failed to delete the note');
+      setError('Failed to delete the note'); // Show an error message in UI
     } finally {
       setDeletingIds((prev) => {
         const updated = new Set(prev);

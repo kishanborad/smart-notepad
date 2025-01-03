@@ -43,7 +43,7 @@ export const getNoteById = async (id) => {
  */
 export const createNote = async (newNote) => {
   try {
-    const response = await axios.post(BASE_URL, newNote); // Send a POST request to create a new note
+    const response = await axios.post(BASE_URL, {...newNote, is_Deleted: false,}); // Send a POST request to create a new note
     return response.data; // Return the created note data
   } catch (error) {
     throw new Error('Error creating note: ' + error.message); // Handle any errors during the request
@@ -74,7 +74,7 @@ export const updateNote = async (id, updatedNote) => {
  */
 export const deleteNote = async (id) => {
   try {
-    const response = await axios.delete(`${BASE_URL}/${id}`); // Send a DELETE request to remove the note
+    const response = await axios.delete(`${BASE_URL}/${id}`, {is_Deleted: true}); // Send a DELETE request to remove the note
     if (response.status === 200) {
       return response.data; // Return success message if the deletion is successful
     } else {
