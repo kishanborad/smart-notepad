@@ -37,13 +37,13 @@ export const getNoteById = async (id) => {
 
 /**
  * Create a new note
- * @param {Object} newNote - The new note data (title and content)
+ * @param {Object} newNote - The new note data (title, content, category, tags)
  * @returns {Promise<Object>} The created note object
  * @throws {Error} Throws an error if creation fails
  */
 export const createNote = async (newNote) => {
   try {
-    const response = await axios.post(BASE_URL, {...newNote, is_Deleted: false,}); // Send a POST request to create a new note
+    const response = await axios.post(BASE_URL, {...newNote, is_Deleted: false}); // Send a POST request to create a new note
     return response.data; // Return the created note data
   } catch (error) {
     throw new Error('Error creating note: ' + error.message); // Handle any errors during the request
@@ -53,7 +53,7 @@ export const createNote = async (newNote) => {
 /**
  * Update an existing note by its ID
  * @param {string} id - The ID of the note to update
- * @param {Object} updatedNote - The updated note data (title and content)
+ * @param {Object} updatedNote - The updated note data (title, content, category, tags)
  * @returns {Promise<Object>} The updated note object
  * @throws {Error} Throws an error if the update fails
  */
@@ -67,14 +67,14 @@ export const updateNote = async (id, updatedNote) => {
 };
 
 /**
- * Delete a note by its ID
+ * Delete a note by its ID (soft delete by marking is_Deleted as true)
  * @param {string} id - The ID of the note to delete
  * @returns {Promise<Object>} Success message from the backend
  * @throws {Error} Throws an error if deletion fails
  */
 export const deleteNote = async (id) => {
   try {
-    const response = await axios.delete(`${BASE_URL}/${id}`, {is_Deleted: true}); // Send a DELETE request to remove the note
+    const response = await axios.put(`${BASE_URL}/${id}`, { is_Deleted: true }); // Send a PUT request to soft delete the note
     if (response.status === 200) {
       return response.data; // Return success message if the deletion is successful
     } else {

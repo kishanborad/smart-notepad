@@ -16,6 +16,15 @@ const noteSchema = new mongoose.Schema({
     type: Boolean, 
     default: false,
   }, // Add the soft delete flag
+  category: {
+    type: String,     // Category of the note (e.g., To-Do, Idea, etc.)
+    enum: ['Text', 'To-Do List', 'Meeting Notes', 'Idea', 'Code Snippets', 'Checklist'], // Limit to specific categories
+    default: 'Text',  // Default category if not specified
+  },
+  tags: { 
+    type: [String],   // Tags for classification (array of strings)
+    default: [],      // Default to an empty array if no tags are provided
+  },
 }, { timestamps: true });  // Automatically add 'createdAt' and 'updatedAt' fields
 
 // Create the model based on the schema
