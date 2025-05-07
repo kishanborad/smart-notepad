@@ -3,6 +3,8 @@
 const express = require('express');
 const router = express.Router();
 const Note = require('../models/Note');
+const noteController = require('../controllers/noteController');
+const aiService = require('../services/aiService');
 
 // POST: Create a new note
 router.post('/', async (req, res) => {
@@ -140,5 +142,81 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// AI Features Routes
+router.post('/analyze', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: 'Text is required' });
+    }
+
+    // Get all AI analysis in parallel
+    const [
+      suggestions,
+      spellingErrors,
+      grammarIssues,
+      writingSuggestions
+    ] = await Promise.all([
+      aiService.getAutocompleteSuggestions(text),
+      aiService.checkSpelling(text),
+      aiService.checkGrammar(text),
+      aiService.getWritingSuggestions(text)
+    ]);
+
+    res.json({
+      suggestions,
+      spellingErrors,
+      grammarIssues,
+      writingSuggestions
+    });
+  } catch (error) {
+    console.error('Error analyzing content:', error);
+    res.status(500).json({ message: 'Error analyzing content' });
+  }
+});
+
+// Dictionary lookup route
+router.get('/dictionary/:word', async (req, res) => {
+  try {
+    const { word } = req.params;
+    const suggestions = await aiService.getDictionarySuggestions(word);
+    res.json({ suggestions });
+  } catch (error) {
+    console.error('Error looking up word:', error);
+    res.status(500).json({ message: 'Error looking up word' });
+  }
+});
+
+// Grammar check route
+router.post('/grammar', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: 'Text is required' });
+    }
+
+    const issues = await aiService.checkGrammar(text);
+    res.json({ issues });
+  } catch (error) {
+    console.error('Error checking grammar:', error);
+    res.status(500).json({ message: 'Error checking grammar' });
+  }
+});
+
+// Writing suggestions route
+router.post('/suggestions', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: 'Text is required' });
+    }
+
+    const suggestions = await aiService.getWritingSuggestions(text);
+    res.json({ suggestions });
+  } catch (error) {
+    console.error('Error getting writing suggestions:', error);
+    res.status(500).json({ message: 'Error getting writing suggestions' });
+  }
+});
 
 module.exports = router;

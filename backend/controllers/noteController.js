@@ -1,98 +1,164 @@
-// backend/controller/noteController.js
+// backend/controllers/noteController.js
 const Note = require('../models/Note');
+const smartNoteService = require('../services/smartNoteService');
 
 // Get all notes
 const getNotes = async (req, res) => {
   try {
-    const notes = await Note.find({is_Deleted: false}); // Retrieve all notes from the database
-    res.status(200).json(notes); // Send the notes as JSON response
+    const notes = await Note.find({ is_Deleted: false })
+      .sort({ isPinned: -1, createdAt: -1 });
+    res.json(notes);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving notes' }); // Handle errors
+    res.status(500).json({ message: error.message });
   }
 };
 
 // Get a single note by ID
 const getNoteById = async (req, res) => {
   try {
-    const note = await Note.findById(req.params.id); // Find note by ID
+    const note = await Note.findById(req.params.id);
     if (!note) {
-      return res.status(404).json({ message: 'Note not found' }); // Return 404 if note is not found
+      return res.status(404).json({ message: 'Note not found' });
     }
-    res.status(200).json(note); // Send the note as JSON response
+    res.json(note);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving note' }); // Handle errors
+    res.status(500).json({ message: error.message });
   }
 };
 
 // Create a new note
 const createNote = async (req, res) => {
-  // Log the incoming request body to check what data is received
-  console.log('Received note data:', req.body);
-
   try {
-    // Destructure fields from the request body
-    const { title, content, is_Deleted } = req.body;
-
-    // Create the new note, ensuring 'is_Deleted' defaults to false if not provided
-    const newNote = new Note({
-      title, // Set title from the request body
-      content, // Set content from the request body
-      is_Deleted: is_Deleted !== undefined ? is_Deleted : false, // Default is_Deleted to false if not provided
-    });
-
-    // Save the new note to the database
-    const savedNote = await newNote.save(); 
-
-    // Send the saved note as JSON response
-    res.status(201).json(savedNote); 
+    let note = new Note(req.body);
+    
+    // Apply smart features
+    note = await smartNoteService.analyzeNote(note);
+    
+    // Format content based on type
+    note.content = smartNoteService.formatContent(note.content, note.category);
+    
+    // Save the note
+    const savedNote = await note.save();
+    res.status(201).json(savedNote);
   } catch (error) {
-    // Handle errors
-    console.error('Error creating note:', error);
-    res.status(500).json({ message: 'Error creating note' }); 
+    res.status(400).json({ message: error.message });
   }
 };
 
-
 // Update an existing note
 const updateNote = async (req, res) => {
-  // Log the data to ensure you have the correct fields
-  console.log('Received update data:', req.body);
-
   try {
-    const updatedNote = await Note.findByIdAndUpdate(
-      req.params.id,
-      { title: req.body.title, content: req.body.content, is_Deleted: false }, // Update title and content
-      { new: true } // Return the updated note
-    );
-    if (!updatedNote) {
-      return res.status(404).json({ message: 'Note not found' }); // Return 404 if note is not found
+    const note = await Note.findById(req.params.id);
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
     }
 
-    // Update note fields if they are provided in the request body
-    if (title) updateNote.title = title;
-    if (content) updateNote.content = content;
-    if (typeof is_Deleted === 'boolean') updateNote.is_Deleted = is_Deleted; // Ensure is_Deleted can be updated
-
-    // const updatedNote = await note.save(); // Save the updated note
-    res.status(200).json(updatedNote); // Send the updated note as JSON response
+    // Update note fields
+    Object.assign(note, req.body);
+    
+    // Re-analyze with smart features
+    note = await smartNoteService.analyzeNote(note);
+    
+    // Re-format content
+    note.content = smartNoteService.formatContent(note.content, note.category);
+    
+    const updatedNote = await note.save();
+    res.json(updatedNote);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating note' }); // Handle errors
+    res.status(400).json({ message: error.message });
   }
 };
 
 // Delete a note
 const deleteNote = async (req, res) => {
   try {
-    const deletedNote = await Note.findByIdAndDelete(req.params.id); // Delete the note by ID
-    if (!deletedNote) {
-      return res.status(404).json({ message: 'Note not found' }); // Return 404 if note is not found
+    const note = await Note.findById(req.params.id);
+    if (!note) {
+      return res.status(404).json({ message: 'Note not found' });
     }
-
-    // Soft delete the note by updating is_Deleted field
-    deletedNote.is_Deleted = true;
-    res.status(200).json({ message: 'Note deleted successfully' }); // Confirm deletion
+    
+    note.is_Deleted = true;
+    await note.save();
+    
+    res.json({ message: 'Note deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting note' }); // Handle errors
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Search notes
+const searchNotes = async (req, res) => {
+  try {
+    const { query, category, tags, startDate, endDate } = req.query;
+    
+    let searchQuery = { is_Deleted: false };
+    
+    // Text search
+    if (query) {
+      searchQuery.$text = { $search: query };
+    }
+    
+    // Category filter
+    if (category) {
+      searchQuery.category = category;
+    }
+    
+    // Tags filter
+    if (tags) {
+      const tagArray = tags.split(',');
+      searchQuery.tags = { $in: tagArray };
+    }
+    
+    // Date range filter
+    if (startDate || endDate) {
+      searchQuery.createdAt = {};
+      if (startDate) searchQuery.createdAt.$gte = new Date(startDate);
+      if (endDate) searchQuery.createdAt.$lte = new Date(endDate);
+    }
+    
+    const notes = await Note.find(searchQuery)
+      .sort({ score: { $meta: "textScore" } })
+      .sort({ isPinned: -1, createdAt: -1 });
+    
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get note analytics
+const getNoteAnalytics = async (req, res) => {
+  try {
+    const analytics = await Note.aggregate([
+      { $match: { is_Deleted: false } },
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 },
+          avgWordCount: { $avg: '$metadata.wordCount' }
+        }
+      }
+    ]);
+    
+    const tagStats = await Note.aggregate([
+      { $match: { is_Deleted: false } },
+      { $unwind: '$tags' },
+      {
+        $group: {
+          _id: '$tags',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+    
+    res.json({
+      categoryStats: analytics,
+      popularTags: tagStats
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -102,4 +168,6 @@ module.exports = {
   createNote,
   updateNote,
   deleteNote,
+  searchNotes,
+  getNoteAnalytics,
 };
