@@ -1,0 +1,60 @@
+# Branch Protection Rules
+
+# Master Branch (Production)
+master:
+  required_status_checks:
+    strict: true
+    contexts:
+      - "build"
+      - "test"
+      - "lint"
+  enforce_admins: true
+  required_pull_request_reviews:
+    required_approving_review_count: 2
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: true
+  restrictions:
+    users: []
+    teams: ["maintainers"]
+
+# Main Branch (Development)
+main:
+  required_status_checks:
+    strict: true
+    contexts:
+      - "build"
+      - "test"
+      - "lint"
+  enforce_admins: false
+  required_pull_request_reviews:
+    required_approving_review_count: 1
+    dismiss_stale_reviews: true
+  restrictions: null
+
+# Frontend Branch
+frontend:
+  required_status_checks:
+    strict: true
+    contexts:
+      - "frontend-build"
+      - "frontend-test"
+      - "frontend-lint"
+  enforce_admins: false
+  required_pull_request_reviews:
+    required_approving_review_count: 1
+    dismiss_stale_reviews: true
+  restrictions: null
+
+# Backend Branch
+backend:
+  required_status_checks:
+    strict: true
+    contexts:
+      - "backend-build"
+      - "backend-test"
+      - "backend-lint"
+  enforce_admins: false
+  required_pull_request_reviews:
+    required_approving_review_count: 1
+    dismiss_stale_reviews: true
+  restrictions: null 
