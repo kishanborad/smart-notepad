@@ -3,10 +3,9 @@ import { AlertColor } from '@mui/material';
 // User types
 export interface User {
   id: string;
-  name: string;
   email: string;
+  name: string;
   avatar?: string;
-  preferences?: UserPreferences;
 }
 
 export interface UserPreferences {
@@ -26,44 +25,16 @@ export interface AuthState {
 // Note types
 export interface Note {
   id: string;
-  title: string;
   content: string;
+  category: NoteCategory;
   tags: string[];
-  isPublic: boolean;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-  sharedWith?: string[];
-  version?: number;
-  versionHistory?: VersionHistory[];
-  metadata?: NoteMetadata;
-  attachments?: Attachment[];
-  reminders?: Reminder[];
-  status: 'active' | 'archived' | 'deleted';
+  color: string;
+  isPinned: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface VersionHistory {
-  content: string;
-  timestamp: string;
-  version: number;
-}
-
-export interface NoteMetadata {
-  wordCount: number;
-  readingTime: number;
-  lastEdited: string;
-}
-
-export interface Attachment {
-  type: string;
-  url: string;
-  name: string;
-}
-
-export interface Reminder {
-  date: string;
-  description: string;
-}
+export type NoteCategory = 'personal' | 'work' | 'ideas' | 'tasks' | 'other';
 
 export interface NotesState {
   items: Note[];
@@ -75,8 +46,8 @@ export interface NotesState {
 // UI types
 export interface Notification {
   id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
   message: string;
-  type: AlertColor;
   duration?: number;
 }
 
@@ -106,24 +77,9 @@ export interface UseNotesReturn {
   error: string | null;
   fetchAllNotes: () => Promise<void>;
   fetchNote: (id: string) => Promise<void>;
-  createNote: (data: {
-    title: string;
-    content: string;
-    tags?: string[];
-    isPublic?: boolean;
-  }) => Promise<boolean>;
-  updateNote: (
-    id: string,
-    data: {
-      title?: string;
-      content?: string;
-      tags?: string[];
-      isPublic?: boolean;
-    }
-  ) => Promise<boolean>;
+  createNote: (data: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => Promise<boolean>;
+  updateNote: (id: string, data: Partial<Note>) => Promise<boolean>;
   deleteNote: (id: string) => Promise<boolean>;
-  shareNote: (id: string, email: string) => Promise<boolean>;
-  unshareNote: (id: string, email: string) => Promise<boolean>;
 }
 
 export interface UseNotificationReturn {
