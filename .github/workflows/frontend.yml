@@ -34,12 +34,18 @@ jobs:
     
     - name: Run Linting
       working-directory: ./frontend
-      run: |
-        npm run lint || true  # Temporarily allow linting to pass
+      run: npm run lint
     
     - name: Run Tests
       working-directory: ./frontend
-      run: npm test -- --watchAll=false
+      run: |
+        npm test -- --watchAll=false --coverage
+    
+    - name: Upload Test Coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: frontend/coverage
     
     - name: Build
       working-directory: ./frontend
@@ -49,4 +55,14 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: frontend-build
-        path: frontend/build 
+        path: frontend/build
+    
+    - name: Cache Dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          frontend/node_modules
+          frontend/.cache
+        key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-frontend- 
