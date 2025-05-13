@@ -122,3 +122,8 @@ ENV/
 *.log
 .cache/
 .temp/
+
+# Keep package-lock.json files
+!package-lock.json
+!frontend/package-lock.json
+!backend/package-lock.json
