@@ -1,8 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { Notification, UIState } from '../../types';
+import { Notification } from '../../types';
 
-const initialState: UIState = {
+interface UiState {
+  darkMode: boolean;
+  sidebarOpen: boolean;
+  notifications: Notification[];
+}
+
+const initialState: UiState = {
   darkMode: false,
   sidebarOpen: true,
   notifications: [],
@@ -14,6 +20,9 @@ const uiSlice = createSlice({
   reducers: {
     toggleDarkMode: (state) => {
       state.darkMode = !state.darkMode;
+    },
+    setDarkMode: (state, action: PayloadAction<boolean>) => {
+      state.darkMode = action.payload;
     },
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen;
@@ -38,6 +47,7 @@ const uiSlice = createSlice({
 
 export const {
   toggleDarkMode,
+  setDarkMode,
   toggleSidebar,
   addNotification,
   removeNotification,
