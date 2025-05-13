@@ -1,58 +1,39 @@
 # Smart Notepad
 
-A feature-rich notepad application with AI-powered writing assistance, smart organization, and advanced note-taking capabilities.
+An intelligent notepad application that automatically organizes and formats your notes, providing a seamless note-taking experience with advanced features.
 
 ## Features
 
-- **Smart Note Organization**
-  - Automatic content categorization
-  - Smart tagging system
-  - Priority-based organization
-  - Cross-platform synchronization
-
-- **AI-Powered Writing Assistance**
-  - Real-time autocomplete suggestions
-  - Spelling and grammar checking
-  - Writing style analysis
-  - Readability scoring
-  - Tone analysis
-  - Structure suggestions
-
-- **Rich Text Editing**
-  - Formatting options
-  - Code snippets
-  - Lists and checkboxes
-  - Image support
-  - Markdown support
-
-- **Smart Features**
-  - Automatic content analysis
-  - Key points extraction
-  - Sentiment analysis
-  - Writing style recommendations
-  - Context-aware suggestions
+- Automatic content organization and categorization
+- Smart formatting and list management
+- Voice-to-text and audio notes
+- Cross-platform sync
+- Task management integration
+- Handwriting recognition
+- Real-time collaboration
+- Version history
+- AI-powered suggestions
+- Security and privacy features
+- Customizable templates
+- Dark mode support
+- Analytics dashboard
+- Note linking and references
+- Daily summaries
+- Auto-tagging
+- Mood and habit tracking
 
 ## Tech Stack
 
-### Frontend
-- React.js
-- React Quill for rich text editing
-- Natural language processing libraries
-- Modern UI with dark mode support
-
-### Backend
-- Node.js
-- Express.js
-- MongoDB with Mongoose
-- Natural language processing with:
-  - Natural
-  - Compromise
-  - Wink NLP
-  - Wink NLP Utils
+- Frontend: React.js
+- Backend: Node.js with Express
+- Database: MongoDB
+- Authentication: JWT
+- Styling: Tailwind CSS
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v14 or higher)
 - MongoDB
 - npm or yarn
@@ -65,31 +46,23 @@ git clone https://github.com/yourusername/smart-notepad.git
 cd smart-notepad
 ```
 
-2. Install frontend dependencies:
+2. Install backend dependencies:
 ```bash
-cd frontend
+cd backend
 npm install
 ```
 
-3. Install backend dependencies:
+3. Install frontend dependencies:
 ```bash
-cd ../backend
+cd ../frontend
 npm install
 ```
 
-4. Create a `.env` file in the backend directory:
-```
-MONGODB_URI=your_mongodb_uri
-PORT=5000
-```
+4. Set up environment variables:
+   - Create `.env` files in both frontend and backend directories
+   - Add necessary environment variables (see `.env.example` files)
 
 5. Start the development servers:
-
-Frontend:
-```bash
-cd frontend
-npm start
-```
 
 Backend:
 ```bash
@@ -97,13 +70,26 @@ cd backend
 npm run dev
 ```
 
-## Usage
+Frontend:
+```bash
+cd frontend
+npm start
+```
 
-1. Create a new note using the "Add Note" button
-2. Use the rich text editor to format your content
-3. Get real-time writing suggestions and corrections
-4. Use smart features like auto-tagging and content analysis
-5. Organize notes with categories and priorities
+## Project Structure
+
+```
+smart-notepad/
+├── frontend/                  # React frontend
+│   ├── public/               # Public assets
+│   └── src/                  # Source code
+├── backend/                  # Express backend
+│   ├── controllers/         # Business logic
+│   ├── models/             # Database schemas
+│   ├── routes/             # API routes
+│   └── config/             # Configuration
+└── README.md               # Project documentation
+```
 
 ## Contributing
 
@@ -115,14 +101,4 @@ npm run dev
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Natural language processing libraries
-- React Quill for rich text editing
-- MongoDB for database
-- All contributors and users of the project
-
-
-
+This project is licensed under the MIT License - see the LICENSE file for details. 

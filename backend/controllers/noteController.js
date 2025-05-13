@@ -1,173 +1,315 @@
-// backend/controllers/noteController.js
 const Note = require('../models/Note');
-const smartNoteService = require('../services/smartNoteService');
-
-// Get all notes
-const getNotes = async (req, res) => {
-  try {
-    const notes = await Note.find({ is_Deleted: false })
-      .sort({ isPinned: -1, createdAt: -1 });
-    res.json(notes);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get a single note by ID
-const getNoteById = async (req, res) => {
-  try {
-    const note = await Note.findById(req.params.id);
-    if (!note) {
-      return res.status(404).json({ message: 'Note not found' });
-    }
-    res.json(note);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+const aiService = require('../services/aiService');
 
 // Create a new note
-const createNote = async (req, res) => {
-  try {
-    let note = new Note(req.body);
-    
-    // Apply smart features
-    note = await smartNoteService.analyzeNote(note);
-    
-    // Format content based on type
-    note.content = smartNoteService.formatContent(note.content, note.category);
-    
-    // Save the note
-    const savedNote = await note.save();
-    res.status(201).json(savedNote);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+exports.createNote = async (req, res) => {
+    try {
+        console.log('Request user:', req.user); // Debug log
+        console.log('User ID:', req.user._id); // Debug log
+
+        const noteData = {
+            ...req.body,
+            user: req.user._id // Use _id from the user object
+        };
+        console.log('Note data:', noteData); // Debug log
+
+        const note = new Note(noteData);
+        await note.save();
+        
+        res.status(201).json({
+            success: true,
+            data: note
+        });
+    } catch (error) {
+        console.error('Error creating note:', error);
+        res.status(400).json({
+            success: false,
+            message: 'Error creating note',
+            error: error.message
+        });
+    }
 };
 
-// Update an existing note
-const updateNote = async (req, res) => {
-  try {
-    const note = await Note.findById(req.params.id);
-    if (!note) {
-      return res.status(404).json({ message: 'Note not found' });
+// Get all notes for a user
+exports.getNotes = async (req, res) => {
+    try {
+        const notes = await Note.findByUser(req.user._id);
+        res.json({
+            success: true,
+            data: notes
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Get a single note
+exports.getNote = async (req, res) => {
+    try {
+        const note = await Note.findOne({
+            _id: req.params.id,
+            user: req.user._id
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: note
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Update a note
+exports.updateNote = async (req, res) => {
+    const updates = Object.keys(req.body);
+    const allowedUpdates = ['title', 'content', 'tags', 'isPinned', 'isArchived', 'color'];
+    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+
+    if (!isValidOperation) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid updates!'
+        });
     }
 
-    // Update note fields
-    Object.assign(note, req.body);
-    
-    // Re-analyze with smart features
-    note = await smartNoteService.analyzeNote(note);
-    
-    // Re-format content
-    note.content = smartNoteService.formatContent(note.content, note.category);
-    
-    const updatedNote = await note.save();
-    res.json(updatedNote);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+    try {
+        const note = await Note.findOne({
+            _id: req.params.id,
+            user: req.user._id
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
+        }
+
+        updates.forEach(update => note[update] = req.body[update]);
+        await note.save();
+
+        res.json({
+            success: true,
+            data: note
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
 };
 
 // Delete a note
-const deleteNote = async (req, res) => {
-  try {
-    const note = await Note.findById(req.params.id);
-    if (!note) {
-      return res.status(404).json({ message: 'Note not found' });
+exports.deleteNote = async (req, res) => {
+    try {
+        const note = await Note.findOneAndDelete({
+            _id: req.params.id,
+            user: req.user._id
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: note
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
-    
-    note.is_Deleted = true;
-    await note.save();
-    
-    res.json({ message: 'Note deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 // Search notes
-const searchNotes = async (req, res) => {
-  try {
-    const { query, category, tags, startDate, endDate } = req.query;
-    
-    let searchQuery = { is_Deleted: false };
-    
-    // Text search
-    if (query) {
-      searchQuery.$text = { $search: query };
+exports.searchNotes = async (req, res) => {
+    try {
+        const notes = await Note.search(req.user._id, req.query.q);
+        res.json({
+            success: true,
+            data: notes
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
-    
-    // Category filter
-    if (category) {
-      searchQuery.category = category;
-    }
-    
-    // Tags filter
-    if (tags) {
-      const tagArray = tags.split(',');
-      searchQuery.tags = { $in: tagArray };
-    }
-    
-    // Date range filter
-    if (startDate || endDate) {
-      searchQuery.createdAt = {};
-      if (startDate) searchQuery.createdAt.$gte = new Date(startDate);
-      if (endDate) searchQuery.createdAt.$lte = new Date(endDate);
-    }
-    
-    const notes = await Note.find(searchQuery)
-      .sort({ score: { $meta: "textScore" } })
-      .sort({ isPinned: -1, createdAt: -1 });
-    
-    res.json(notes);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
-// Get note analytics
-const getNoteAnalytics = async (req, res) => {
-  try {
-    const analytics = await Note.aggregate([
-      { $match: { is_Deleted: false } },
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 },
-          avgWordCount: { $avg: '$metadata.wordCount' }
+// Get related notes
+exports.getRelatedNotes = async (req, res) => {
+    try {
+        const note = await Note.findOne({
+            _id: req.params.id,
+            userId: req.user.id
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
         }
-      }
-    ]);
-    
-    const tagStats = await Note.aggregate([
-      { $match: { is_Deleted: false } },
-      { $unwind: '$tags' },
-      {
-        $group: {
-          _id: '$tags',
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
-    
-    res.json({
-      categoryStats: analytics,
-      popularTags: tagStats
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+
+        const relatedNotes = await note.findRelatedNotes();
+
+        res.json({
+            success: true,
+            data: relatedNotes
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error finding related notes',
+            error: error.message
+        });
+    }
 };
 
-module.exports = {
-  getNotes,
-  getNoteById,
-  createNote,
-  updateNote,
-  deleteNote,
-  searchNotes,
-  getNoteAnalytics,
+// Share a note
+exports.shareNote = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const note = await Note.findOne({
+            _id: req.params.id,
+            userId: req.user.id
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
+        }
+
+        // TODO: Implement sharing logic with email service
+        // For now, just make the note public
+        note.isPublic = true;
+        await note.save();
+
+        res.json({
+            success: true,
+            message: 'Note shared successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error sharing note',
+            error: error.message
+        });
+    }
 };
+
+// Add collaborator to note
+exports.addCollaborator = async (req, res) => {
+    try {
+        const note = await Note.findOne({
+            _id: req.params.id,
+            user: req.user._id,
+            status: 'active'
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
+        }
+
+        await note.addCollaborator(req.body.userId);
+        await note.populate('collaborators', 'username email profile.avatar');
+
+        res.json({
+            success: true,
+            data: note
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Remove collaborator from note
+exports.removeCollaborator = async (req, res) => {
+    try {
+        const note = await Note.findOne({
+            _id: req.params.id,
+            user: req.user._id,
+            status: 'active'
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
+        }
+
+        await note.removeCollaborator(req.params.userId);
+        await note.populate('collaborators', 'username email profile.avatar');
+
+        res.json({
+            success: true,
+            data: note
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Get note version history
+exports.getVersionHistory = async (req, res) => {
+    try {
+        const note = await Note.findOne({
+            _id: req.params.id,
+            $or: [
+                { user: req.user._id },
+                { collaborators: req.user._id }
+            ],
+            status: 'active'
+        });
+
+        if (!note) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: note.versionHistory
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+}; 

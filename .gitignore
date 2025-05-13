@@ -109,3 +109,16 @@ frontend/public/assets/*.bak
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# --- Misc ---
+*.log
+.cache/
+.temp/
