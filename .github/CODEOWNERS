@@ -1,0 +1,17 @@
+# These owners will be the default owners for everything in the repo
+* @kishanborad
+
+# Frontend specific files
+/frontend/ @kishanborad
+
+# Backend specific files
+/backend/ @kishanborad
+
+# Documentation
+/docs/ @kishanborad
+
+# Configuration files
+/.github/ @kishanborad
+/package.json @kishanborad
+/tsconfig.json @kishanborad
+/.eslintrc.json @kishanborad 
