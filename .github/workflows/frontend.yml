@@ -26,20 +26,36 @@ jobs:
     
     - name: Install Dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: |
+        npm ci
+        npm list --depth=0
     
     - name: Type Check
       working-directory: ./frontend
-      run: npx tsc --noEmit
+      run: |
+        npx tsc --noEmit || {
+          echo "TypeScript errors found:"
+          npx tsc --noEmit
+          exit 1
+        }
     
     - name: Run Linting
       working-directory: ./frontend
-      run: npm run lint
+      run: |
+        npm run lint || {
+          echo "Linting errors found:"
+          npm run lint
+          exit 1
+        }
     
     - name: Run Tests
       working-directory: ./frontend
       run: |
-        npm test -- --watchAll=false --coverage
+        npm test -- --watchAll=false --coverage || {
+          echo "Test failures found:"
+          npm test -- --watchAll=false --coverage
+          exit 1
+        }
     
     - name: Upload Test Coverage
       uses: actions/upload-artifact@v3
@@ -49,7 +65,12 @@ jobs:
     
     - name: Build
       working-directory: ./frontend
-      run: npm run build
+      run: |
+        npm run build || {
+          echo "Build failed:"
+          npm run build
+          exit 1
+        }
     
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v3
