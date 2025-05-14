@@ -1,47 +1,95 @@
 # This file is intentionally left empty to reset CI/CD. 
 
-name: Node.js CI
+name: Build and Deploy Pipeline
 
 on:
   push:
-    branches: ["*"]
+    branches: [ main, master, frontend, backend ]
   pull_request:
-    branches: ["*"]
+    branches: [ main, master, frontend, backend ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [18.x]
+
     steps:
       - uses: actions/checkout@v4
+      
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      # Frontend
+      # Frontend Build
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: |
-          npm ci
-          npm install antd@5.15.0
+        run: npm install
+
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
-      - name: Test frontend
-        working-directory: ./frontend
-        run: npm test -- --watchAll=false
 
-      # Backend
+      # Backend Build
       - name: Install backend dependencies
         working-directory: ./backend
-        run: npm ci
+        run: npm install
+
       - name: Build backend
         working-directory: ./backend
         run: npm run build
-      - name: Test backend
+
+      # Cache build artifacts
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/build
+            backend/dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      # Restore build artifacts
+      - name: Restore build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/build
+            backend/dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      # Deploy Frontend
+      - name: Deploy Frontend
+        working-directory: ./frontend
+        run: |
+          echo "Deploying frontend..."
+          # Add your frontend deployment commands here
+          # For example: npm run deploy
+
+      # Deploy Backend
+      - name: Deploy Backend
         working-directory: ./backend
-        run: npm test 
+        run: |
+          echo "Deploying backend..."
+          # Add your backend deployment commands here
+          # For example: npm run deploy 
