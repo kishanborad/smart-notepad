@@ -1,16 +1,15 @@
 import express from 'express';
+import { register, login, getProfile } from '../controllers/authController';
+import { auth } from '../middleware/auth';
+
 const router = express.Router();
 
 // Login route
-router.post('/login', (req, res) => {
-  // TODO: Implement login logic
-  res.json({ message: 'Login endpoint' });
-});
+router.post('/login', login);
 
 // Register route
-router.post('/register', (req, res) => {
-  // TODO: Implement register logic
-  res.json({ message: 'Register endpoint' });
-});
+router.post('/register', register);
+
+router.get('/profile', auth, getProfile);
 
 export default router; 

@@ -12,24 +12,33 @@ const NoteForm: React.FC<NoteFormProps> = ({ onAddNote }) => {
   const [category, setCategory] = useState<NoteCategory>('personal');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim() || !title.trim()) return;
 
-    onAddNote({
-      title,
-      content,
-      category,
-      tags,
-      color: '#ffffff',
-      isPinned: false,
-    });
+    setIsSubmitting(true);
+    try {
+      await onAddNote({
+        title,
+        content,
+        category,
+        tags,
+        color: '#ffffff',
+        isPinned: false,
+      });
 
-    setTitle('');
-    setContent('');
-    setTags([]);
-    setTagInput('');
+      // Reset form
+      setTitle('');
+      setContent('');
+      setTags([]);
+      setTagInput('');
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddTag = (e: React.KeyboardEvent) => {
@@ -55,6 +64,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onAddNote }) => {
         placeholder="Note title..."
         sx={{ mb: 2 }}
         required
+        disabled={isSubmitting}
       />
       <FormControl fullWidth sx={{ mb: 2 }}>
         <InputLabel>Category</InputLabel>
@@ -62,6 +72,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onAddNote }) => {
           value={category}
           label="Category"
           onChange={(e) => setCategory(e.target.value as NoteCategory)}
+          disabled={isSubmitting}
         >
           <MenuItem value="personal">Personal</MenuItem>
           <MenuItem value="work">Work</MenuItem>
@@ -79,6 +90,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onAddNote }) => {
         placeholder="Write your note here..."
         sx={{ mb: 2 }}
         required
+        disabled={isSubmitting}
       />
       <TextField
         fullWidth
@@ -87,6 +99,7 @@ const NoteForm: React.FC<NoteFormProps> = ({ onAddNote }) => {
         onKeyDown={handleAddTag}
         placeholder="Add tags (press Enter)"
         sx={{ mb: 2 }}
+        disabled={isSubmitting}
       />
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
         {tags.map((tag) => (
@@ -95,13 +108,19 @@ const NoteForm: React.FC<NoteFormProps> = ({ onAddNote }) => {
             size="small"
             variant="outlined"
             onClick={() => handleRemoveTag(tag)}
+            disabled={isSubmitting}
           >
             {tag} ×
           </Button>
         ))}
       </Box>
-      <Button type="submit" variant="contained" fullWidth>
-        Add Note
+      <Button 
+        type="submit" 
+        variant="contained" 
+        fullWidth
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Creating...' : 'Add Note'}
       </Button>
     </Box>
   );

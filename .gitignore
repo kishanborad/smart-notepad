@@ -15,7 +15,7 @@ yarn-error.log*
 
 # --- Node.js Dependencies ---
 node_modules/
-/.pnp
+.pnp/
 .pnp.js
 
 # --- Build and Cache ---
@@ -26,6 +26,7 @@ frontend/build/
 frontend/dist/
 frontend/.cache/
 backend/build/
+*.tsbuildinfo
 
 # --- Temporary Files ---
 tmp/
@@ -127,3 +128,13 @@ ENV/
 !package-lock.json
 !frontend/package-lock.json
 !backend/package-lock.json
+
+# Security
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore

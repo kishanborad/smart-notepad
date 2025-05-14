@@ -1,34 +1,46 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { fetchNotes, createNote, updateNote, deleteNote } from '../store/slices/notesSlice';
 import NoteList from '../components/NoteList';
 import NoteForm from '../components/NoteForm';
-import useLocalStorage from '../hooks/useLocalStorage';
 import { Note, NoteCategory } from '../types';
 import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Typography } from '@mui/material';
+import type { AppDispatch } from '../store';
 
 const Dashboard: React.FC = () => {
-  const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
+  const dispatch = useDispatch<AppDispatch>();
+  const { items: notes, loading, error } = useSelector((state: RootState) => state.notes);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState<NoteCategory | 'all'>('all');
   const [sortBy, setSortBy] = React.useState<'date' | 'category'>('date');
 
-  const handleAddNote = (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newNote: Note = {
-      ...note,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setNotes([...notes, newNote]);
+  useEffect(() => {
+    dispatch(fetchNotes());
+  }, [dispatch]);
+
+  const handleAddNote = async (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      await dispatch(createNote(note)).unwrap();
+    } catch (error) {
+      console.error('Failed to create note:', error);
+    }
   };
 
-  const handleUpdateNote = (id: string, updates: Partial<Note>) => {
-    setNotes(notes.map((note: Note) => 
-      note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString() } : note
-    ));
+  const handleUpdateNote = async (id: string, updates: Partial<Note>) => {
+    try {
+      await dispatch(updateNote({ id, data: updates })).unwrap();
+    } catch (error) {
+      console.error('Failed to update note:', error);
+    }
   };
 
-  const handleDeleteNote = (id: string) => {
-    setNotes(notes.filter((note: Note) => note.id !== id));
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await dispatch(deleteNote(id)).unwrap();
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+    }
   };
 
   const filteredNotes = notes
@@ -44,6 +56,14 @@ const Dashboard: React.FC = () => {
       }
       return a.category.localeCompare(b.category);
     });
+
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
+
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
 
   return (
     <Box sx={{ p: 3 }}>
