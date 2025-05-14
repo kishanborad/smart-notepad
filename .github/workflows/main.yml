@@ -51,11 +51,31 @@ jobs:
           exit 1
         fi
     
+    - name: Create ESLint Config
+      working-directory: ./frontend
+      run: |
+        echo '{
+          "extends": [
+            "plugin:react/recommended",
+            "plugin:@typescript-eslint/recommended"
+          ],
+          "parser": "@typescript-eslint/parser",
+          "plugins": [
+            "react",
+            "@typescript-eslint"
+          ],
+          "settings": {
+            "react": {
+              "version": "detect"
+            }
+          }
+        }' > .eslintrc.json
+    
     - name: Run Frontend Linting
       working-directory: ./frontend
       run: |
         if [ -f "package.json" ]; then
-          npx eslint --config '{"extends":["plugin:react/recommended","plugin:@typescript-eslint/recommended"],"parser":"@typescript-eslint/parser","plugins":["react","@typescript-eslint"],"settings":{"react":{"version":"detect"}}}' src --ext .ts,.tsx
+          npx eslint src --ext .ts,.tsx
         else
           echo "No frontend package.json found"
           exit 1
