@@ -1,5 +1,3 @@
-import { AlertColor } from '@mui/material';
-
 // User types
 export interface User {
   id: string;
@@ -25,13 +23,17 @@ export interface AuthState {
 // Note types
 export interface Note {
   id: string;
+  title: string;
   content: string;
-  category: NoteCategory;
+  category: string;
   tags: string[];
   color: string;
   isPinned: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
+  isPublic?: boolean;
+  userId?: string;
+  status?: 'active' | 'archived' | 'deleted';
 }
 
 export type NoteCategory = 'personal' | 'work' | 'ideas' | 'tasks' | 'other';

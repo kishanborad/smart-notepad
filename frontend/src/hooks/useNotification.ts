@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { AlertColor } from '@mui/material';
 import { addNotification, removeNotification } from '../store/slices/uiSlice';
 import { UseNotificationReturn, Notification } from '../types';
 

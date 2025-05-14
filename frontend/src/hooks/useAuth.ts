@@ -17,7 +17,7 @@ import { useNotification } from './useNotification';
 export const useAuth = (): UseAuthReturn => {
   const dispatch = useDispatch<AppDispatch>();
   const { showNotification } = useNotification();
-  const { user, loading, error, token, isAuthenticated } = useSelector(
+  const { user, loading, error, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
 
