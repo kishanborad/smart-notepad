@@ -43,11 +43,29 @@ jobs:
             eslint-plugin-react-hooks@4.6.0 \
             eslint-plugin-jsx-a11y@6.8.0 \
             eslint-plugin-import@2.29.1 \
+            define-properties@1.2.1 \
             object.fromentries@1.0.0 \
             object.entries@1.1.7 \
             object.values@1.1.7 \
             object.assign@4.1.5 \
-            object.getownpropertydescriptors@2.1.7
+            object.getownpropertydescriptors@2.1.7 \
+            es-abstract@1.22.3 \
+            function-bind@1.1.2 \
+            has@1.0.4 \
+            has-proto@1.0.1 \
+            has-symbols@1.0.3 \
+            is-callable@1.2.7 \
+            is-negative-zero@2.0.2 \
+            is-regex@1.1.4 \
+            is-string@1.0.7 \
+            object-inspect@1.12.3 \
+            object-keys@1.1.1 \
+            object.assign@4.1.5 \
+            regexp.prototype.flags@0.0.1 \
+            safe-regex-test@1.0.1 \
+            string.prototype.trimend@1.0.7 \
+            string.prototype.trimstart@1.0.7 \
+            unbox-primitive@1.0.2
         else
           echo "No frontend package.json found"
           exit 1
