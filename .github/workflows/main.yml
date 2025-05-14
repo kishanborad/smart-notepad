@@ -8,9 +8,15 @@ on:
   pull_request:
     branches: [ main, master, frontend, backend ]
 
+env:
+  NODE_ENV: production
+  REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'http://localhost:3000' }}
+  BACKEND_API_URL: ${{ secrets.BACKEND_API_URL || 'http://localhost:5050' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         node-version: [18.x]
@@ -28,19 +34,23 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
+        continue-on-error: false
 
       - name: Build frontend
         working-directory: ./frontend
         run: DISABLE_ESLINT_PLUGIN=true npm run build
+        continue-on-error: false
 
       # Backend Build
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm install
+        continue-on-error: false
 
       - name: Build backend
         working-directory: ./backend
         run: npm run build
+        continue-on-error: false
 
       # Cache build artifacts
       - name: Cache build artifacts
@@ -57,6 +67,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
     steps:
       - uses: actions/checkout@v4
@@ -78,18 +89,62 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-
 
-      # Deploy Frontend
+      # Deploy Frontend to Vercel
       - name: Deploy Frontend
         working-directory: ./frontend
         run: |
-          echo "Deploying frontend..."
-          # Add your frontend deployment commands here
-          # For example: npm run deploy
+          echo "Deploying frontend to Vercel..."
+          if [ -d "build" ]; then
+            if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+              npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+            else
+              echo "Skipping Vercel deployment - no token provided"
+            fi
+            echo "Frontend deployment completed"
+          else
+            echo "Error: Frontend build directory not found"
+            exit 1
+          fi
+        continue-on-error: false
 
-      # Deploy Backend
+      # Deploy Backend to Heroku
       - name: Deploy Backend
         working-directory: ./backend
         run: |
-          echo "Deploying backend..."
-          # Add your backend deployment commands here
-          # For example: npm run deploy 
+          echo "Deploying backend to Heroku..."
+          if [ -d "dist" ]; then
+            # Install Heroku CLI using npm
+            npm install -g heroku
+            # Login to Heroku
+            heroku auth:token ${{ secrets.HEROKU_API_KEY }}
+            # Deploy to Heroku
+            git remote add heroku https://heroku:${{ secrets.HEROKU_API_KEY }}@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
+            git push heroku HEAD:main -f
+            echo "Backend deployment completed"
+          else
+            echo "Error: Backend build directory not found"
+            exit 1
+          fi
+        continue-on-error: false
+
+      # Notify on success
+      - name: Notify on success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: good
+          SLACK_TITLE: Deployment Successful
+          SLACK_MESSAGE: 'Deployment completed successfully! :rocket:'
+
+      # Notify on failure
+      - name: Notify on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: danger
+          SLACK_TITLE: Deployment Failed
+          SLACK_MESSAGE: 'Deployment failed! :warning:' 
