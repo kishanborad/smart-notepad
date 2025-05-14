@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Select, Space, ColorPicker, Switch } from 'antd';
+import { Form, Input, Button, Select, Space, Switch } from 'antd';
 import { SaveOutlined, CloseOutlined } from '@ant-design/icons';
-import { Note } from '../types/note';
+import { Note } from '../types';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -19,12 +19,11 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave, onCancel }) => {
     useEffect(() => {
         if (note) {
             form.setFieldsValue({
-                title: note.title,
                 content: note.content,
                 tags: note.tags,
-                type: note.type,
+                category: note.category,
                 color: note.color,
-                improveContent: note.improveContent
+                isPinned: note.isPinned,
             });
         }
     }, [note, form]);
@@ -34,7 +33,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave, onCancel }) => {
         try {
             await onSave({
                 ...values,
-                _id: note?._id
+                id: note?.id
             });
             form.resetFields();
         } finally {
@@ -48,20 +47,12 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave, onCancel }) => {
             layout="vertical"
             onFinish={handleSubmit}
             initialValues={{
-                type: 'text',
+                category: 'personal',
                 color: '#ffffff',
-                improveContent: false
+                isPinned: false
             }}
         >
             <Space direction="vertical" style={{ width: '100%' }} size="large">
-                <Form.Item
-                    name="title"
-                    label="Title"
-                    rules={[{ required: true, message: 'Please enter a title' }]}
-                >
-                    <Input placeholder="Enter note title" />
-                </Form.Item>
-
                 <Form.Item
                     name="content"
                     label="Content"
@@ -82,25 +73,23 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note, onSave, onCancel }) => {
                 </Form.Item>
 
                 <Space>
-                    <Form.Item name="type" label="Type">
-                        <Select style={{ width: 120 }}>
-                            <Option value="text">Text</Option>
-                            <Option value="todo">Todo</Option>
-                            <Option value="meeting">Meeting</Option>
-                            <Option value="idea">Idea</Option>
-                            <Option value="code">Code</Option>
-                            <Option value="checklist">Checklist</Option>
-                            <Option value="sketch">Sketch</Option>
+                    <Form.Item name="category" label="Category">
+                        <Select style={{ width: 140 }}>
+                            <Option value="personal">Personal</Option>
+                            <Option value="work">Work</Option>
+                            <Option value="ideas">Ideas</Option>
+                            <Option value="tasks">Tasks</Option>
+                            <Option value="other">Other</Option>
                         </Select>
                     </Form.Item>
 
                     <Form.Item name="color" label="Color">
-                        <ColorPicker />
+                        <Input type="color" style={{ width: 60, height: 40, padding: 0, border: 'none' }} />
                     </Form.Item>
 
                     <Form.Item
-                        name="improveContent"
-                        label="Improve with AI"
+                        name="isPinned"
+                        label="Pin Note"
                         valuePropName="checked"
                     >
                         <Switch />

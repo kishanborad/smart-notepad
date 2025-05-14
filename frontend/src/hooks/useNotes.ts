@@ -3,12 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
 import {
-  fetchNotes,
-  fetchNoteById,
-  createNote,
-  updateNote,
-  deleteNote,
-  shareNote,
   fetchNotesStart,
   fetchNotesSuccess,
   fetchNotesFailure,
@@ -59,19 +53,17 @@ interface NotesHookReturn {
 }
 
 const ensureNoteStatus = (note: Partial<Note>): Note => {
-  const status = note.status || 'active';
-  if (status !== 'active' && status !== 'archived' && status !== 'deleted') {
-    throw new Error(`Invalid note status: ${status}`);
-  }
-  
   return {
     ...note,
-    status,
+    id: note.id || '',
+    title: note.title || '',
+    content: note.content || '',
+    category: note.category || 'personal',
     tags: note.tags || [],
+    color: note.color || '#ffffff',
+    isPinned: note.isPinned || false,
     createdAt: note.createdAt || new Date().toISOString(),
     updatedAt: note.updatedAt || new Date().toISOString(),
-    isPublic: note.isPublic ?? false,
-    userId: note.userId || '',
   } as Note;
 };
 
@@ -79,7 +71,7 @@ export const useNotes = (): NotesHookReturn => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { showNotification } = useNotification();
-  const { notes, currentNote, loading, error } = useSelector(
+  const { items: notes, currentNote, loading, error } = useSelector(
     (state: RootState) => state.notes
   );
 

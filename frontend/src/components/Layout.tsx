@@ -1,118 +1,33 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  AppBar,
-  Box,
-  CssBaseline,
-  Drawer,
-  IconButton,
-  Toolbar,
-  Typography,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import {
-  Menu as MenuIcon,
-  Brightness4 as DarkModeIcon,
-  Brightness7 as LightModeIcon,
-  AccountCircle as AccountIcon,
-} from '@mui/icons-material';
+import { Outlet } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { toggleDarkMode, toggleSidebar } from '../store/slices/uiSlice';
-import Sidebar from 'components/Sidebar';
-
-const drawerWidth = 240;
+import { AppBar, Toolbar, IconButton, Typography, Box } from '@mui/material';
+import { Brightness4, Brightness7 } from '@mui/icons-material';
+import { useDispatch } from 'react-redux';
+import { toggleDarkMode } from '../store/slices/uiSlice';
 
 const Layout: React.FC = () => {
-  const theme = useTheme();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { darkMode, sidebarOpen } = useSelector((state: RootState) => state.ui);
-
-  const handleDrawerToggle = () => {
-    dispatch(toggleSidebar());
-  };
-
-  const handleThemeToggle = () => {
-    dispatch(toggleDarkMode());
-  };
-
-  const handleProfileClick = () => {
-    navigate('/profile');
-  };
+  const { darkMode } = useSelector((state: RootState) => state.ui);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${sidebarOpen ? drawerWidth : 0}px)` },
-          ml: { sm: `${sidebarOpen ? drawerWidth : 0}px` },
-          transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-        }}
-      >
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <AppBar position="static">
         <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Smart Notepad
           </Typography>
-          <IconButton color="inherit" onClick={handleThemeToggle}>
-            {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-          <IconButton color="inherit" onClick={handleProfileClick}>
-            <AccountIcon />
+          <IconButton
+            color="inherit"
+            onClick={() => dispatch(toggleDarkMode())}
+            edge="end"
+          >
+            {darkMode ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
-        <Drawer
-          variant={isMobile ? 'temporary' : 'persistent'}
-          open={sidebarOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-            },
-          }}
-        >
-          <Sidebar />
-        </Drawer>
-      </Box>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${sidebarOpen ? drawerWidth : 0}px)` },
-          ml: { sm: `${sidebarOpen ? drawerWidth : 0}px` },
-          transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-        }}
-      >
-        <Toolbar />
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Outlet />
       </Box>
     </Box>

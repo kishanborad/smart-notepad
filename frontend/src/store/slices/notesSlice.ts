@@ -3,14 +3,14 @@ import { notes } from '../../services/api';
 import { Note } from '../../types';
 
 interface NotesState {
-  notes: Note[];
+  items: Note[];
   currentNote: Note | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: NotesState = {
-  notes: [],
+  items: [],
   currentNote: null,
   loading: false,
   error: null,
@@ -31,16 +31,16 @@ export const fetchNoteById = createAsyncThunk(
 
 export const createNote = createAsyncThunk(
   'notes/create',
-  async (noteData: { title: string; content: string }) => {
-    const response = await notes.create(noteData);
+  async (data: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const response = await notes.create(data);
     return response.data;
   }
 );
 
 export const updateNote = createAsyncThunk(
   'notes/update',
-  async ({ id, noteData }: { id: string; noteData: { title: string; content: string } }) => {
-    const response = await notes.update(id, noteData);
+  async ({ id, data }: { id: string; data: Partial<Note> }) => {
+    const response = await notes.update(id, data);
     return response.data;
   }
 );
@@ -71,7 +71,7 @@ const notesSlice = createSlice({
     },
     fetchNotesSuccess: (state, action: PayloadAction<Note[]>) => {
       state.loading = false;
-      state.notes = action.payload;
+      state.items = action.payload;
     },
     fetchNotesFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
@@ -86,7 +86,7 @@ const notesSlice = createSlice({
     },
     createNoteSuccess: (state, action: PayloadAction<Note>) => {
       state.loading = false;
-      state.notes.push(action.payload);
+      state.items.push(action.payload);
       state.currentNote = action.payload;
     },
     createNoteFailure: (state, action: PayloadAction<string>) => {
@@ -99,9 +99,9 @@ const notesSlice = createSlice({
     },
     updateNoteSuccess: (state, action: PayloadAction<Note>) => {
       state.loading = false;
-      const index = state.notes.findIndex((note) => note.id === action.payload.id);
+      const index = state.items.findIndex((note) => note.id === action.payload.id);
       if (index !== -1) {
-        state.notes[index] = action.payload;
+        state.items[index] = action.payload;
       }
       if (state.currentNote?.id === action.payload.id) {
         state.currentNote = action.payload;
@@ -117,7 +117,7 @@ const notesSlice = createSlice({
     },
     deleteNoteSuccess: (state, action: PayloadAction<string>) => {
       state.loading = false;
-      state.notes = state.notes.filter((note) => note.id !== action.payload);
+      state.items = state.items.filter((note) => note.id !== action.payload);
       if (state.currentNote?.id === action.payload) {
         state.currentNote = null;
       }
@@ -139,7 +139,7 @@ const notesSlice = createSlice({
       })
       .addCase(fetchNotes.fulfilled, (state, action) => {
         state.loading = false;
-        state.notes = action.payload;
+        state.items = action.payload;
       })
       .addCase(fetchNotes.rejected, (state, action) => {
         state.loading = false;
@@ -165,7 +165,7 @@ const notesSlice = createSlice({
       })
       .addCase(createNote.fulfilled, (state, action) => {
         state.loading = false;
-        state.notes.push(action.payload);
+        state.items.push(action.payload);
         state.currentNote = action.payload;
       })
       .addCase(createNote.rejected, (state, action) => {
@@ -179,9 +179,9 @@ const notesSlice = createSlice({
       })
       .addCase(updateNote.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.notes.findIndex((note) => note.id === action.payload.id);
+        const index = state.items.findIndex((note) => note.id === action.payload.id);
         if (index !== -1) {
-          state.notes[index] = action.payload;
+          state.items[index] = action.payload;
         }
         state.currentNote = action.payload;
       })
@@ -196,7 +196,7 @@ const notesSlice = createSlice({
       })
       .addCase(deleteNote.fulfilled, (state, action) => {
         state.loading = false;
-        state.notes = state.notes.filter((note) => note.id !== action.payload);
+        state.items = state.items.filter((note) => note.id !== action.payload);
         if (state.currentNote?.id === action.payload) {
           state.currentNote = null;
         }

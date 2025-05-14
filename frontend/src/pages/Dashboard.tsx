@@ -1,176 +1,101 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  IconButton,
-  TextField,
-  InputAdornment,
-  Chip,
-  Menu,
-  MenuItem,
-  Button,
-} from '@mui/material';
-import {
-  Search as SearchIcon,
-  Add as AddIcon,
-  MoreVert as MoreVertIcon,
-  Delete as DeleteIcon,
-  Share as ShareIcon,
-} from '@mui/icons-material';
-import { useNotes } from '../hooks/useNotes';
-import { useNotification } from '../hooks/useNotification';
+import React from 'react';
+import NoteList from '../components/NoteList';
+import NoteForm from '../components/NoteForm';
+import useLocalStorage from '../hooks/useLocalStorage';
+import { Note, NoteCategory } from '../types';
+import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Typography } from '@mui/material';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { notes, isLoading, error, deleteNote } = useNotes();
-  const { showNotification } = useNotification();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [selectedCategory, setSelectedCategory] = React.useState<NoteCategory | 'all'>('all');
+  const [sortBy, setSortBy] = React.useState<'date' | 'category'>('date');
 
-  useEffect(() => {
-    if (error) {
-      showNotification(error, 'error');
-    }
-  }, [error, showNotification]);
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+  const handleAddNote = (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newNote: Note = {
+      ...note,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setNotes([...notes, newNote]);
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, noteId: string) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedNoteId(noteId);
+  const handleUpdateNote = (id: string, updates: Partial<Note>) => {
+    setNotes(notes.map((note: Note) => 
+      note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString() } : note
+    ));
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedNoteId(null);
+  const handleDeleteNote = (id: string) => {
+    setNotes(notes.filter((note: Note) => note.id !== id));
   };
 
-  const handleCreateNote = () => {
-    navigate('/notes/new');
-  };
-
-  const handleEditNote = (noteId: string) => {
-    navigate(`/notes/${noteId}`);
-    handleMenuClose();
-  };
-
-  const handleDeleteNote = async () => {
-    if (selectedNoteId) {
-      const success = await deleteNote(selectedNoteId);
-      if (success) {
-        showNotification('Note deleted successfully', 'success');
+  const filteredNotes = notes
+    .filter((note: Note) => {
+      const matchesSearch = note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesCategory = selectedCategory === 'all' || note.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a: Note, b: Note) => {
+      if (sortBy === 'date') {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       }
-    }
-    handleMenuClose();
-  };
-
-  const filteredNotes = notes.filter((note) =>
-    note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+      return a.category.localeCompare(b.category);
+    });
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        My Notes
+      </Typography>
+      <NoteForm onAddNote={handleAddNote} />
+      <Box sx={{ mb: 4 }}>
         <TextField
+          fullWidth
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search notes..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ width: 300 }}
+          sx={{ mb: 2 }}
+          variant="outlined"
         />
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreateNote}
-        >
-          New Note
-        </Button>
-      </Box>
-
-      <Grid container spacing={3}>
-        {filteredNotes.map((note) => (
-          <Grid item xs={12} sm={6} md={4} key={note.id}>
-            <Card
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-              }}
-              onClick={() => handleEditNote(note.id)}
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Category</InputLabel>
+            <Select
+              value={selectedCategory}
+              label="Category"
+              onChange={(e) => setSelectedCategory(e.target.value as NoteCategory | 'all')}
+              variant="outlined"
             >
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6" component="h2" noWrap>
-                    {note.title}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMenuOpen(e, note.id);
-                    }}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </Box>
-                <Typography
-                  color="textSecondary"
-                  sx={{
-                    mt: 1,
-                    mb: 2,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                >
-                  {note.content}
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {note.tags.map((tag) => (
-                    <Chip key={tag} label={tag} size="small" />
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => selectedNoteId && handleEditNote(selectedNoteId)}>
-          Edit
-        </MenuItem>
-        <MenuItem onClick={handleDeleteNote}>
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          Delete
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <ShareIcon fontSize="small" sx={{ mr: 1 }} />
-          Share
-        </MenuItem>
-      </Menu>
+              <MenuItem value="all">All Categories</MenuItem>
+              <MenuItem value="personal">Personal</MenuItem>
+              <MenuItem value="work">Work</MenuItem>
+              <MenuItem value="ideas">Ideas</MenuItem>
+              <MenuItem value="tasks">Tasks</MenuItem>
+              <MenuItem value="other">Other</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select
+              value={sortBy}
+              label="Sort By"
+              onChange={(e) => setSortBy(e.target.value as 'date' | 'category')}
+              variant="outlined"
+            >
+              <MenuItem value="date">Date</MenuItem>
+              <MenuItem value="category">Category</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
+      <NoteList
+        notes={filteredNotes}
+        onUpdateNote={handleUpdateNote}
+        onDeleteNote={handleDeleteNote}
+      />
     </Box>
   );
 };
