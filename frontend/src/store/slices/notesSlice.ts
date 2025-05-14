@@ -31,7 +31,15 @@ export const fetchNoteById = createAsyncThunk(
 
 export const createNote = createAsyncThunk(
   'notes/create',
-  async (data: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
+  async (data: {
+    title: string;
+    content: string;
+    tags?: string[];
+    isPublic?: boolean;
+    category?: string;
+    color?: string;
+    isPinned?: boolean;
+  }) => {
     const response = await notes.create(data);
     return response.data;
   }
@@ -65,66 +73,8 @@ const notesSlice = createSlice({
   name: 'notes',
   initialState,
   reducers: {
-    fetchNotesStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
-    fetchNotesSuccess: (state, action: PayloadAction<Note[]>) => {
-      state.loading = false;
-      state.items = action.payload;
-    },
-    fetchNotesFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.error = action.payload;
-    },
     setCurrentNote: (state, action: PayloadAction<Note | null>) => {
       state.currentNote = action.payload;
-    },
-    createNoteStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
-    createNoteSuccess: (state, action: PayloadAction<Note>) => {
-      state.loading = false;
-      state.items.push(action.payload);
-      state.currentNote = action.payload;
-    },
-    createNoteFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.error = action.payload;
-    },
-    updateNoteStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
-    updateNoteSuccess: (state, action: PayloadAction<Note>) => {
-      state.loading = false;
-      const index = state.items.findIndex((note) => note.id === action.payload.id);
-      if (index !== -1) {
-        state.items[index] = action.payload;
-      }
-      if (state.currentNote?.id === action.payload.id) {
-        state.currentNote = action.payload;
-      }
-    },
-    updateNoteFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.error = action.payload;
-    },
-    deleteNoteStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
-    deleteNoteSuccess: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.items = state.items.filter((note) => note.id !== action.payload);
-      if (state.currentNote?.id === action.payload) {
-        state.currentNote = null;
-      }
-    },
-    deleteNoteFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.error = action.payload;
     },
     clearError: (state) => {
       state.error = null;
@@ -183,7 +133,9 @@ const notesSlice = createSlice({
         if (index !== -1) {
           state.items[index] = action.payload;
         }
-        state.currentNote = action.payload;
+        if (state.currentNote?.id === action.payload.id) {
+          state.currentNote = action.payload;
+        }
       })
       .addCase(updateNote.rejected, (state, action) => {
         state.loading = false;
@@ -208,21 +160,6 @@ const notesSlice = createSlice({
   },
 });
 
-export const {
-  fetchNotesStart,
-  fetchNotesSuccess,
-  fetchNotesFailure,
-  setCurrentNote,
-  createNoteStart,
-  createNoteSuccess,
-  createNoteFailure,
-  updateNoteStart,
-  updateNoteSuccess,
-  updateNoteFailure,
-  deleteNoteStart,
-  deleteNoteSuccess,
-  deleteNoteFailure,
-  clearError,
-} = notesSlice.actions;
+export const { setCurrentNote, clearError } = notesSlice.actions;
 
 export default notesSlice.reducer; 
