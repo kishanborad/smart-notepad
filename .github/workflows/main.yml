@@ -25,7 +25,9 @@ jobs:
       # Frontend
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          npm ci
+          npm install antd@5.15.0
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
