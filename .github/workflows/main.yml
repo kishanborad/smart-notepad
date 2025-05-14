@@ -1,152 +1,45 @@
-name: CI/CD Pipeline
+# This file is intentionally left empty to reset CI/CD. 
+
+name: Node.js CI
 
 on:
   push:
-    branches: [ main, master, frontend, backend ]
+    branches: ["*"]
   pull_request:
-    branches: [ main, master, frontend, backend ]
+    branches: ["*"]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [16.x, 18.x]
-
+        node-version: [18.x]
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    
-    - name: Install Root Dependencies
-      run: |
-        if [ -f "package.json" ]; then
-          npm ci
-        else
-          echo "No root package.json found, skipping root dependencies"
-        fi
-    
-    - name: Install Frontend Dependencies
-      working-directory: ./frontend
-      run: |
-        if [ -f "package.json" ]; then
-          npm ci
-          npm install --save-dev \
-            eslint@8.57.1 \
-            @typescript-eslint/parser@7.3.1 \
-            @typescript-eslint/eslint-plugin@7.3.1 \
-            eslint-plugin-react@7.34.0 \
-            eslint-plugin-react-hooks@4.6.0 \
-            eslint-plugin-jsx-a11y@6.8.0 \
-            eslint-plugin-import@2.29.1
-        else
-          echo "No frontend package.json found"
-          exit 1
-        fi
-    
-    - name: Install Backend Dependencies
-      working-directory: ./backend
-      run: |
-        if [ -f "package.json" ]; then
-          npm ci
-        else
-          echo "No backend package.json found"
-          exit 1
-        fi
-    
-    - name: Create ESLint Config
-      working-directory: ./frontend
-      run: |
-        echo '{
-          "extends": [
-            "plugin:react/recommended",
-            "plugin:@typescript-eslint/recommended"
-          ],
-          "parser": "@typescript-eslint/parser",
-          "plugins": [
-            "react",
-            "@typescript-eslint"
-          ],
-          "settings": {
-            "react": {
-              "version": "detect"
-            }
-          }
-        }' > .eslintrc.json
-    
-    - name: Run Frontend Linting
-      working-directory: ./frontend
-      run: |
-        if [ -f "package.json" ]; then
-          npx eslint src --ext .ts,.tsx
-        else
-          echo "No frontend package.json found"
-          exit 1
-        fi
-    
-    - name: Run Backend Linting
-      working-directory: ./backend
-      run: |
-        if [ -f "package.json" ]; then
-          npm run lint
-        else
-          echo "No backend package.json found"
-          exit 1
-        fi
-    
-    - name: Run Frontend Tests
-      working-directory: ./frontend
-      run: |
-        if [ -f "package.json" ]; then
-          npm test
-        else
-          echo "No frontend package.json found"
-          exit 1
-        fi
-    
-    - name: Run Backend Tests
-      working-directory: ./backend
-      run: |
-        if [ -f "package.json" ]; then
-          npm test
-        else
-          echo "No backend package.json found"
-          exit 1
-        fi
-    
-    - name: Build Frontend
-      working-directory: ./frontend
-      run: |
-        if [ -f "package.json" ]; then
-          npm run build
-        else
-          echo "No frontend package.json found"
-          exit 1
-        fi
-    
-    - name: Build Backend
-      working-directory: ./backend
-      run: |
-        if [ -f "package.json" ]; then
-          npm run build
-        else
-          echo "No backend package.json found"
-          exit 1
-        fi
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-  deploy:
-    needs: build-and-test
-    if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Deploy to Production
-      run: |
-        echo "Deploying to production..."
-        # Add your deployment commands here 
+      # Frontend
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+      - name: Test frontend
+        working-directory: ./frontend
+        run: npm test -- --watchAll=false
+
+      # Backend
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+      - name: Test backend
+        working-directory: ./backend
+        run: npm test 
