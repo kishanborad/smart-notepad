@@ -1,25 +1,30 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { RootState } from '../store';
+import { AppDispatch, RootState } from '../store';
 import {
-  fetchNotesStart,
-  fetchNotesSuccess,
-  fetchNotesFailure,
-  setCurrentNote,
-  createNoteStart,
-  createNoteSuccess,
-  createNoteFailure,
-  updateNoteStart,
-  updateNoteSuccess,
-  updateNoteFailure,
-  deleteNoteStart,
-  deleteNoteSuccess,
-  deleteNoteFailure,
+  fetchNotes,
+  fetchNoteById,
+  createNote,
+  updateNote,
+  deleteNote,
+  shareNote,
 } from '../store/slices/notesSlice';
 import { useNotification } from './useNotification';
 import { notes as notesApi } from '../services/api';
 import { Note } from '../types';
+
+type NoteInput = {
+  title: string;
+  content: string;
+  tags?: string[];
+  isPublic?: boolean;
+  category?: string;
+  color?: string;
+  isPinned?: boolean;
+};
+
+type NoteUpdate = Partial<NoteInput>;
 
 interface NotesHookReturn {
   notes: Note[];
@@ -28,227 +33,102 @@ interface NotesHookReturn {
   error: string | null;
   fetchAllNotes: () => Promise<void>;
   fetchNote: (id: string) => Promise<void>;
-  createNewNote: (title: string, content: string) => Promise<void>;
-  updateExistingNote: (id: string, title: string, content: string) => Promise<void>;
-  deleteExistingNote: (id: string) => Promise<void>;
-  shareExistingNote: (id: string, email: string) => Promise<void>;
-  createNote: (data: {
-    title: string;
-    content: string;
-    tags?: string[];
-    isPublic?: boolean;
-  }) => Promise<boolean>;
-  updateNote: (
-    id: string,
-    data: {
-      title?: string;
-      content?: string;
-      tags?: string[];
-      isPublic?: boolean;
-    }
-  ) => Promise<boolean>;
+  createNote: (data: NoteInput) => Promise<boolean>;
+  updateNote: (id: string, data: NoteUpdate) => Promise<boolean>;
   deleteNote: (id: string) => Promise<boolean>;
   shareNote: (id: string, email: string) => Promise<boolean>;
   unshareNote: (id: string, email: string) => Promise<boolean>;
 }
 
-const ensureNoteStatus = (note: Partial<Note>): Note => {
-  return {
-    ...note,
-    id: note.id || '',
-    title: note.title || '',
-    content: note.content || '',
-    category: note.category || 'personal',
-    tags: note.tags || [],
-    color: note.color || '#ffffff',
-    isPinned: note.isPinned || false,
-    createdAt: note.createdAt || new Date().toISOString(),
-    updatedAt: note.updatedAt || new Date().toISOString(),
-  } as Note;
-};
-
 export const useNotes = (): NotesHookReturn => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const { items: notes, currentNote, loading, error } = useSelector(
     (state: RootState) => state.notes
   );
 
+  const handleError = useCallback(
+    (err: any, defaultMessage: string) => {
+      const errorMessage = err.message || defaultMessage;
+      showNotification(errorMessage, 'error');
+      return false;
+    },
+    [showNotification]
+  );
+
   const fetchAllNotes = useCallback(async () => {
     try {
-      dispatch(fetchNotesStart());
-      const response = await notesApi.getAll();
-      const notesWithStatus = response.data.map(ensureNoteStatus);
-      dispatch(fetchNotesSuccess(notesWithStatus));
+      await dispatch(fetchNotes()).unwrap();
     } catch (err) {
-      dispatch(fetchNotesFailure('Failed to fetch notes'));
-      showNotification('Failed to fetch notes', 'error');
+      handleError(err, 'Failed to fetch notes');
     }
-  }, [dispatch, showNotification]);
+  }, [dispatch, handleError]);
 
   const fetchNote = useCallback(
     async (id: string) => {
       try {
-        const response = await notesApi.getById(id);
-        const noteWithStatus = ensureNoteStatus(response.data);
-        dispatch(setCurrentNote(noteWithStatus));
+        await dispatch(fetchNoteById(id)).unwrap();
       } catch (err) {
-        showNotification('Failed to fetch note', 'error');
+        handleError(err, 'Failed to fetch note');
         navigate('/');
       }
     },
-    [dispatch, navigate, showNotification]
+    [dispatch, navigate, handleError]
   );
 
-  const createNewNote = useCallback(
-    async (title: string, content: string) => {
+  const createNoteHandler = useCallback(
+    async (data: NoteInput) => {
       try {
-        dispatch(createNoteStart());
-        const response = await notesApi.create({ title, content });
-        const noteWithStatus = ensureNoteStatus(response.data);
-        dispatch(createNoteSuccess(noteWithStatus));
+        const result = await dispatch(createNote(data)).unwrap();
         showNotification('Note created successfully', 'success');
-        navigate(`/notes/${noteWithStatus.id}`);
+        navigate(`/notes/${result.id}`);
+        return true;
       } catch (err) {
-        dispatch(createNoteFailure('Failed to create note'));
-        showNotification('Failed to create note', 'error');
+        return handleError(err, 'Failed to create note');
       }
     },
-    [dispatch, navigate, showNotification]
+    [dispatch, navigate, showNotification, handleError]
   );
 
-  const updateExistingNote = useCallback(
-    async (id: string, title: string, content: string) => {
+  const updateNoteHandler = useCallback(
+    async (id: string, data: NoteUpdate) => {
       try {
-        dispatch(updateNoteStart());
-        const response = await notesApi.update(id, { title, content });
-        const noteWithStatus = ensureNoteStatus(response.data);
-        dispatch(updateNoteSuccess(noteWithStatus));
+        await dispatch(updateNote({ id, data })).unwrap();
         showNotification('Note updated successfully', 'success');
+        return true;
       } catch (err) {
-        dispatch(updateNoteFailure('Failed to update note'));
-        showNotification('Failed to update note', 'error');
+        return handleError(err, 'Failed to update note');
       }
     },
-    [dispatch, showNotification]
+    [dispatch, showNotification, handleError]
   );
 
-  const deleteExistingNote = useCallback(
+  const deleteNoteHandler = useCallback(
     async (id: string) => {
       try {
-        dispatch(deleteNoteStart());
-        await notesApi.delete(id);
-        dispatch(deleteNoteSuccess(id));
+        await dispatch(deleteNote(id)).unwrap();
         showNotification('Note deleted successfully', 'success');
         navigate('/');
+        return true;
       } catch (err) {
-        dispatch(deleteNoteFailure('Failed to delete note'));
-        showNotification('Failed to delete note', 'error');
+        return handleError(err, 'Failed to delete note');
       }
     },
-    [dispatch, navigate, showNotification]
+    [dispatch, navigate, showNotification, handleError]
   );
 
-  const shareExistingNote = useCallback(
+  const shareNoteHandler = useCallback(
     async (id: string, email: string) => {
       try {
-        await notesApi.share(id, email);
+        await dispatch(shareNote({ id, email })).unwrap();
         showNotification('Note shared successfully', 'success');
+        return true;
       } catch (err) {
-        showNotification('Failed to share note', 'error');
+        return handleError(err, 'Failed to share note');
       }
     },
-    [showNotification]
-  );
-
-  const createNote = useCallback(
-    async (data: {
-      title: string;
-      content: string;
-      tags?: string[];
-      isPublic?: boolean;
-    }) => {
-      try {
-        dispatch(createNoteStart());
-        const response = await notesApi.create(data);
-        const noteWithStatus = ensureNoteStatus(response.data);
-        dispatch(createNoteSuccess(noteWithStatus));
-        return true;
-      } catch (error: any) {
-        dispatch(
-          createNoteFailure(
-            error.response?.data?.message || 'Failed to create note'
-          )
-        );
-        return false;
-      }
-    },
-    [dispatch]
-  );
-
-  const updateNote = useCallback(
-    async (
-      id: string,
-      data: {
-        title?: string;
-        content?: string;
-        tags?: string[];
-        isPublic?: boolean;
-      }
-    ) => {
-      try {
-        dispatch(updateNoteStart());
-        const response = await notesApi.update(id, data);
-        const noteWithStatus = ensureNoteStatus(response.data);
-        dispatch(updateNoteSuccess(noteWithStatus));
-        return true;
-      } catch (error: any) {
-        dispatch(
-          updateNoteFailure(
-            error.response?.data?.message || 'Failed to update note'
-          )
-        );
-        return false;
-      }
-    },
-    [dispatch]
-  );
-
-  const deleteNote = useCallback(
-    async (id: string) => {
-      try {
-        dispatch(deleteNoteStart());
-        await notesApi.delete(id);
-        dispatch(deleteNoteSuccess(id));
-        return true;
-      } catch (error: any) {
-        dispatch(
-          deleteNoteFailure(
-            error.response?.data?.message || 'Failed to delete note'
-          )
-        );
-        return false;
-      }
-    },
-    [dispatch]
-  );
-
-  const shareNote = useCallback(
-    async (id: string, email: string) => {
-      try {
-        await notesApi.share(id, email);
-        showNotification('Note shared successfully', 'success');
-        return true;
-      } catch (error: any) {
-        showNotification(
-          error.response?.data?.message || 'Failed to share note',
-          'error'
-        );
-        return false;
-      }
-    },
-    [showNotification]
+    [dispatch, showNotification, handleError]
   );
 
   const unshareNote = useCallback(
@@ -257,15 +137,11 @@ export const useNotes = (): NotesHookReturn => {
         await notesApi.unshare(id, email);
         showNotification('Note unshared successfully', 'success');
         return true;
-      } catch (error: any) {
-        showNotification(
-          error.response?.data?.message || 'Failed to unshare note',
-          'error'
-        );
-        return false;
+      } catch (err) {
+        return handleError(err, 'Failed to unshare note');
       }
     },
-    [showNotification]
+    [showNotification, handleError]
   );
 
   useEffect(() => {
@@ -279,14 +155,10 @@ export const useNotes = (): NotesHookReturn => {
     error,
     fetchAllNotes,
     fetchNote,
-    createNewNote,
-    updateExistingNote,
-    deleteExistingNote,
-    shareExistingNote,
-    createNote,
-    updateNote,
-    deleteNote,
-    shareNote,
+    createNote: createNoteHandler,
+    updateNote: updateNoteHandler,
+    deleteNote: deleteNoteHandler,
+    shareNote: shareNoteHandler,
     unshareNote,
   };
 };
