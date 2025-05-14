@@ -35,7 +35,7 @@ jobs:
       run: |
         if [ -f "package.json" ]; then
           npm ci
-          npm install --save-dev eslint-config-react-app @typescript-eslint/parser @typescript-eslint/eslint-plugin
+          npm install --save-dev eslint@8.57.1 eslint-config-react-app@7.0.1 @typescript-eslint/parser@7.3.1 @typescript-eslint/eslint-plugin@7.3.1 eslint-plugin-react@7.34.0 eslint-plugin-react-hooks@4.6.0 eslint-plugin-jsx-a11y@6.8.0 eslint-plugin-import@2.29.1
         else
           echo "No frontend package.json found"
           exit 1
@@ -55,7 +55,7 @@ jobs:
       working-directory: ./frontend
       run: |
         if [ -f "package.json" ]; then
-          npx eslint src --ext .ts,.tsx
+          npx eslint --config .eslintrc.json src --ext .ts,.tsx
         else
           echo "No frontend package.json found"
           exit 1
