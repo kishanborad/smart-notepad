@@ -22,28 +22,93 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Install Dependencies
+    - name: Install Root Dependencies
       run: |
-        npm ci
-        cd frontend && npm ci
-        cd ../backend && npm ci
+        if [ -f "package.json" ]; then
+          npm ci
+        else
+          echo "No root package.json found, skipping root dependencies"
+        fi
     
-    - name: Run Linting
+    - name: Install Frontend Dependencies
+      working-directory: ./frontend
       run: |
-        npm run lint
-        cd frontend && npm run lint
-        cd ../backend && npm run lint
+        if [ -f "package.json" ]; then
+          npm ci
+        else
+          echo "No frontend package.json found"
+          exit 1
+        fi
     
-    - name: Run Tests
+    - name: Install Backend Dependencies
+      working-directory: ./backend
       run: |
-        npm test
-        cd frontend && npm test
-        cd ../backend && npm test
+        if [ -f "package.json" ]; then
+          npm ci
+        else
+          echo "No backend package.json found"
+          exit 1
+        fi
     
-    - name: Build
+    - name: Run Frontend Linting
+      working-directory: ./frontend
       run: |
-        cd frontend && npm run build
-        cd ../backend && npm run build
+        if [ -f "package.json" ]; then
+          npm run lint
+        else
+          echo "No frontend package.json found"
+          exit 1
+        fi
+    
+    - name: Run Backend Linting
+      working-directory: ./backend
+      run: |
+        if [ -f "package.json" ]; then
+          npm run lint
+        else
+          echo "No backend package.json found"
+          exit 1
+        fi
+    
+    - name: Run Frontend Tests
+      working-directory: ./frontend
+      run: |
+        if [ -f "package.json" ]; then
+          npm test
+        else
+          echo "No frontend package.json found"
+          exit 1
+        fi
+    
+    - name: Run Backend Tests
+      working-directory: ./backend
+      run: |
+        if [ -f "package.json" ]; then
+          npm test
+        else
+          echo "No backend package.json found"
+          exit 1
+        fi
+    
+    - name: Build Frontend
+      working-directory: ./frontend
+      run: |
+        if [ -f "package.json" ]; then
+          npm run build
+        else
+          echo "No frontend package.json found"
+          exit 1
+        fi
+    
+    - name: Build Backend
+      working-directory: ./backend
+      run: |
+        if [ -f "package.json" ]; then
+          npm run build
+        else
+          echo "No backend package.json found"
+          exit 1
+        fi
 
   deploy:
     needs: build-and-test
