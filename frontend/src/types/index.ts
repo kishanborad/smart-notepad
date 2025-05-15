@@ -110,4 +110,17 @@ export interface RootState {
   auth: AuthState;
   notes: NotesState;
   ui: UIState;
+}
+
+export * from './note';
+
+export interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export interface SettingsFormValues {
+  darkMode: boolean;
+  fontSize: 'small' | 'medium' | 'large';
+  autoSave: boolean;
+  language: 'en' | 'es' | 'fr';
 } 
