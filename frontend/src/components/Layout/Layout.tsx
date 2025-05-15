@@ -4,7 +4,7 @@ import type { MenuProps } from 'antd';
 import { MenuFoldOutlined, MenuUnfoldOutlined, HomeOutlined, FileTextOutlined, SettingOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { LayoutProps } from '../../types';
+import type { LayoutProps } from '../../types';
 
 const { Header, Sider, Content } = AntLayout;
 
